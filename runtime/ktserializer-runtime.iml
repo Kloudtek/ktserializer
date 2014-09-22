@@ -12,7 +12,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: com.kloudtek.ktutils:ktutils:1.2-SNAPSHOT" level="project" />
-    <orderEntry type="module" module-name="ktutils" />
   </component>
 </module>
 
