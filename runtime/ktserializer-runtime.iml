@@ -11,7 +11,19 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.kloudtek.ktutils:ktutils:1.2-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="ktutils" />
+    <orderEntry type="module" module-name="ktutils-core" />
+    <orderEntry type="module" module-name="ktutils-jetty" />
+    <orderEntry type="module" module-name="ktutils-android" />
+    <orderEntry type="module" module-name="ktutils-geo" />
+    <orderEntry type="module" module-name="ktutils-xml" />
+    <orderEntry type="module" module-name="ktutils-io" />
+    <orderEntry type="module" module-name="ktutils-jee" />
+    <orderEntry type="module" module-name="ktutils-jsf" />
+    <orderEntry type="module" module-name="ktutils-logging" />
+    <orderEntry type="module" module-name="ktutils-selenium" />
+    <orderEntry type="module" module-name="ktutils-spring" />
+    <orderEntry type="module" module-name="ktutils-testing" />
   </component>
 </module>
 
