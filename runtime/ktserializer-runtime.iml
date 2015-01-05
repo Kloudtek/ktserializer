@@ -5,25 +5,15 @@
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="ktutils" />
-    <orderEntry type="module" module-name="ktutils-core" />
-    <orderEntry type="module" module-name="ktutils-jetty" />
-    <orderEntry type="module" module-name="ktutils-android" />
-    <orderEntry type="module" module-name="ktutils-geo" />
-    <orderEntry type="module" module-name="ktutils-xml" />
-    <orderEntry type="module" module-name="ktutils-io" />
-    <orderEntry type="module" module-name="ktutils-jee" />
-    <orderEntry type="module" module-name="ktutils-jsf" />
-    <orderEntry type="module" module-name="ktutils-logging" />
-    <orderEntry type="module" module-name="ktutils-selenium" />
-    <orderEntry type="module" module-name="ktutils-spring" />
-    <orderEntry type="module" module-name="ktutils-testing" />
+    <orderEntry type="library" name="Maven: com.intellij:annotations:12.0" level="project" />
+    <orderEntry type="library" name="Maven: com.kloudtek.ktutils:ktutils-io:1.2-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.kloudtek.ktutils:ktutils-core:1.2-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.intellij:annotations:12.0" level="project" />
   </component>
 </module>
-
