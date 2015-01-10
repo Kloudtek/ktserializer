@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Kloudtek Ltd
+ * Copyright (c) 2015 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -30,6 +30,11 @@ public abstract class AbstractCustomSerializable implements CustomSerializable, 
         } catch (IOException e) {
             throw new InvalidSerializedDataException(e);
         }
+    }
+
+    @Override
+    public int getVersion() {
+        return 0;
     }
 
     @NotNull

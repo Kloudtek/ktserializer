@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Kloudtek Ltd
+ * Copyright (c) 2015 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -102,7 +102,7 @@ public class Serializer {
     }
 
     public static byte[] serialize(@NotNull Object object) {
-        return serialize(object, null);
+        return serialize(object, new SerializationContext(Serializer.getThreadLocalContext()));
     }
 
     public static byte[] serialize(@NotNull Object object, @NotNull SerializationContext context) {
