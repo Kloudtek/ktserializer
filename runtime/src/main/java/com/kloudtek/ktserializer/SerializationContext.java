@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Kloudtek Ltd
+ * Copyright (c) 2015 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -11,24 +11,13 @@ import java.util.HashMap;
  */
 public class SerializationContext {
     protected SerializationContext parent;
-    protected Integer version;
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
 
     public SerializationContext() {
         parent = Serializer.getThreadLocalContext();
     }
 
-    public SerializationContext(Integer version) {
-        this.version = version;
-        parent = Serializer.getThreadLocalContext();
-    }
-
     public SerializationContext(SerializationContext parent) {
-        this.parent = parent;
-    }
-
-    public SerializationContext(Integer version, SerializationContext parent) {
-        this.version = version;
         this.parent = parent;
     }
 
@@ -52,14 +41,6 @@ public class SerializationContext {
 
     public <X> X get(Class<X> classType) {
         return classType.cast(getImpl(classType.getName()));
-    }
-
-    public Integer getVersion() {
-        return version;
-    }
-
-    void setVersion(Integer version) {
-        this.version = version;
     }
 
     private Object getImpl(String key) {

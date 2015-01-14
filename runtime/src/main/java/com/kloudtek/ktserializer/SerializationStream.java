@@ -1,27 +1,26 @@
 /*
- * Copyright (c) 2014 Kloudtek Ltd
+ * Copyright (c) 2015 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
 
 import com.kloudtek.util.io.ByteArrayDataOutputStream;
-import com.kloudtek.util.io.DataInputStream;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * Created by yannick on 30/12/2014.
  */
 public class SerializationStream extends ByteArrayDataOutputStream {
     private @NotNull SerializationContext context;
+    private ByteArrayDataOutputStream stream;
 
-    public SerializationStream(@NotNull SerializationContext context) {
+    public SerializationStream(@NotNull SerializationContext context) throws IOException {
         super();
         this.context = context;
+        // payload flags (nothing at the moment)
+        write(0);
     }
 
     @NotNull
@@ -29,12 +28,22 @@ public class SerializationStream extends ByteArrayDataOutputStream {
         return context;
     }
 
-    public void writeObject( Serializable serializable ) throws IOException {
+    public void writeObject(Serializable serializable, ClassMapper classMapper) throws IOException {
         if( serializable instanceof CustomSerializable ) {
-            new ObjectSerializationMetadata(((CustomSerializable) serializable).getVersion()).write(this);
-            writeData(Serializer.serialize(serializable));
+            writeObject(serializable, classMapper, true);
         } else {
             throw new IllegalArgumentException("Only CustomSerializable supported at this time");
+        }
+    }
+
+    void writeObject(Serializable serializable, ClassMapper classMapper, boolean subStream) throws IOException {
+        SerializationStream ss = subStream ? new SerializationStream(context) : this;
+        final ObjectSerializationMetadata metadata = new ObjectSerializationMetadata(
+                ((CustomSerializable) serializable).getVersion(), serializable.getClass(), classMapper);
+        metadata.write(ss);
+        ((CustomSerializable) serializable).serialize(ss);
+        if (subStream) {
+            writeData(ss.toByteArray());
         }
     }
 }
