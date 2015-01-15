@@ -11,74 +11,71 @@ import java.io.IOException;
 import static org.testng.Assert.assertEquals;
 
 public class ObjectSerializationMetadataTest {
+    private TestClassMapper classMapper0 = new TestClassMapper(0, TestClass.class);
+
     @Test
     public void testMinIntVersion() throws IOException, InvalidSerializedDataException {
-        test(65536, 6, Serializable.class, Serializable.class, null);
+        test(65536, 7, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
     public void testMaxIntVersion() throws IOException, InvalidSerializedDataException {
-        test(Integer.MAX_VALUE, 6, Serializable.class, Serializable.class, null);
+        test(Integer.MAX_VALUE, 7, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
     public void testMaxShortVersion() throws IOException, InvalidSerializedDataException {
-        test(65535, 4, Serializable.class, Serializable.class, null);
+        test(65535, 5, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
     public void testMinShortVersion() throws IOException, InvalidSerializedDataException {
-        test(256, 4, Serializable.class, Serializable.class, null);
+        test(256, 5, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
     public void testMaxByteVersion() throws IOException, InvalidSerializedDataException {
-        test(255, 3, Serializable.class, Serializable.class, null);
+        test(255, 4, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
     public void testMinByteVersion() throws IOException, InvalidSerializedDataException {
-        test(1, 3, Serializable.class, Serializable.class, null);
+        test(1, 4, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
     public void testNoVersion() throws IOException, InvalidSerializedDataException {
-        test(0, 2, Serializable.class, Serializable.class, null);
+        test(0, 3, TestClass.class, TestClass.class, classMapper0);
     }
 
     @Test
-    public void testExpectedClass() throws IOException, InvalidSerializedDataException {
-        test(0, 2, ITest.class, ITest.class, null);
-    }
-
-    @Test
-    public void testUnexpectedClassNotMapped() throws IOException, InvalidSerializedDataException {
+    public void testUnmappedClass() throws IOException, InvalidSerializedDataException {
         test(0, 71, ITest.class, TestClass.class, null);
     }
 
     @Test
-    public void testUnexpectedClassMappedMinByte() throws IOException, InvalidSerializedDataException {
-        test(0, 3, ITest.class, TestClass.class, new TestClassMapper(0, TestClass.class));
+    public void testClassMappedMinByte() throws IOException, InvalidSerializedDataException {
+        test(0, 3, ITest.class, TestClass.class, classMapper0);
     }
 
     @Test
-    public void testUnexpectedClassMappedMaxByte() throws IOException, InvalidSerializedDataException {
+    public void testClassMappedMaxByte() throws IOException, InvalidSerializedDataException {
         test(0, 3, ITest.class, TestClass.class, new TestClassMapper(255, TestClass.class));
     }
 
     @Test
-    public void testUnexpectedClassMappedMinShort() throws IOException, InvalidSerializedDataException {
+    public void testClassMappedMinShort() throws IOException, InvalidSerializedDataException {
         test(0, 4, ITest.class, TestClass.class, new TestClassMapper(256, TestClass.class));
     }
 
     @Test
-    public void testUnexpectedClassMappedMaxShort() throws IOException, InvalidSerializedDataException {
+    public void testClassMappedMaxShort() throws IOException, InvalidSerializedDataException {
         test(0, 4, ITest.class, TestClass.class, new TestClassMapper(65535, TestClass.class));
     }
 
     @Test
-    public void testUnexpectedClassMappedTooLarge() throws IOException, InvalidSerializedDataException {
-        test(0, 71, ITest.class, TestClass.class, new TestClassMapper(65536, TestClass.class));
+    public void testClassMappedMinInt() throws IOException, InvalidSerializedDataException {
+        test(0, 6, ITest.class, TestClass.class, new TestClassMapper(65536, TestClass.class));
     }
 
     @Test
@@ -128,7 +125,7 @@ public class ObjectSerializationMetadataTest {
         @Override
         public int get(String classType) {
             if (!classType.equals(className)) {
-                throw new IllegalArgumentException("Not class " + className);
+                throw new IllegalArgumentException(classType + " != " + className);
             }
             return classId;
         }

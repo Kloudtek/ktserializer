@@ -16,10 +16,10 @@ public class ObjectSerializationMetadata {
     private static final int VERSION_BYTE = 1;
     private static final int VERSION_SHORT = 2;
     private static final int VERSION_INT = 3;
-    private static final int CLASS_UNKNOWN = 0;
-    private static final int CLASS_DYNAMIC = 1;
-    private static final int CLASS_BYTE = 2;
-    private static final int CLASS_SHORT = 3;
+    private static final int CLASS_DYNAMIC = 0;
+    private static final int CLASS_BYTE = 1;
+    private static final int CLASS_SHORT = 2;
+    private static final int CLASS_INT = 3;
     private int version;
     private Integer classId;
     private Class<? extends Serializable> classType;
@@ -46,18 +46,21 @@ public class ObjectSerializationMetadata {
                 throw new UnexpectedException("BUG: invalid version flags: " + versionFlags);
         }
         String className = null;
-        if (classFlags == CLASS_UNKNOWN) {
-            classType = expectedClassType;
-        } else if (classFlags == CLASS_DYNAMIC) {
-            className = ds.readUTF();
-        } else {
-            if (classFlags == CLASS_BYTE) {
+        switch (classFlags) {
+            case CLASS_DYNAMIC:
+                className = ds.readUTF();
+                break;
+            case CLASS_BYTE:
                 classId = ds.readUnsignedByte();
-            } else if (classFlags == CLASS_SHORT) {
+                break;
+            case CLASS_SHORT:
                 classId = ds.readUnsignedShort();
-            } else {
-                throw new UnexpectedException("BUG: invalid classTypeFlag value: " + versionFlags);
-            }
+                break;
+            case CLASS_INT:
+                classId = ds.readInt();
+                break;
+        }
+        if (classId != null) {
             if (classMapper == null) {
                 classMapper = Serializer.getClassMapper(expectedClassType);
                 if (classMapper == null) {
@@ -69,14 +72,12 @@ public class ObjectSerializationMetadata {
                 throw new InvalidSerializedDataException("Class id can't be mapped: " + classId);
             }
         }
-        if (classType == null) {
-            try {
-                classType = (Class<? extends Serializable>) Class.forName(className);
-            } catch (ClassNotFoundException e) {
-                throw new InvalidSerializedDataException(e);
-            } catch (ClassCastException e) {
-                throw new InvalidSerializedDataException(e);
-            }
+        try {
+            classType = (Class<? extends Serializable>) Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            throw new InvalidSerializedDataException(e);
+        } catch (ClassCastException e) {
+            throw new InvalidSerializedDataException(e);
         }
     }
 
@@ -107,23 +108,30 @@ public class ObjectSerializationMetadata {
         int versionFlags = getVersionFlags();
         int classFlags = getClassFlags();
         ss.write(versionFlags | (classFlags << 2));
-        if (versionFlags == VERSION_BYTE) {
-            ss.write(version);
-        } else if (versionFlags == VERSION_SHORT) {
-            ss.writeShort(version);
-        } else if (versionFlags == VERSION_INT) {
-            ss.writeInt(version);
+        switch (versionFlags) {
+            case VERSION_BYTE:
+                ss.write(version);
+                break;
+            case VERSION_SHORT:
+                ss.writeShort(version);
+                break;
+            case CLASS_INT:
+                ss.writeInt(version);
+                break;
         }
-        if (classFlags != CLASS_UNKNOWN) {
-            if (classFlags == CLASS_BYTE) {
-                ss.write(classId);
-            } else if (classFlags == CLASS_SHORT) {
-                ss.writeShort(classId);
-            } else if (classFlags == CLASS_DYNAMIC) {
+        switch (classFlags) {
+            case CLASS_DYNAMIC:
                 ss.writeUTF(classType.getName());
-            } else {
-                throw new UnexpectedException("BUG: invalid class flag " + classFlags);
-            }
+                break;
+            case CLASS_BYTE:
+                ss.write(classId);
+                break;
+            case CLASS_SHORT:
+                ss.writeShort(classId);
+                break;
+            case CLASS_INT:
+                ss.writeInt(classId);
+                break;
         }
     }
 
@@ -149,13 +157,13 @@ public class ObjectSerializationMetadata {
 
     private int getClassFlags() {
         if (classId == null) {
-            return CLASS_UNKNOWN;
+            return CLASS_DYNAMIC;
         } else if (classId <= 255) {
             return CLASS_BYTE;
         } else if (classId <= 65535) {
             return CLASS_SHORT;
         } else {
-            return CLASS_DYNAMIC;
+            return CLASS_INT;
         }
     }
 }
