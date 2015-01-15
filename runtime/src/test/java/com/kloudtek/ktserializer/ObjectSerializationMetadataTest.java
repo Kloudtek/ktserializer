@@ -90,11 +90,11 @@ public class ObjectSerializationMetadataTest {
 
     private void test(int version, int size, Class<? extends Serializable> expected, Class<? extends Serializable> actual, ClassMapper classMapper) throws IOException, InvalidSerializedDataException {
         ObjectSerializationMetadata m1 = new ObjectSerializationMetadata(version, actual, classMapper);
-        SerializationStream ss = new SerializationStream(new SerializationContext());
+        SerializationStream ss = new SerializationStream(new Serializer());
         m1.write(ss);
         byte[] data = ss.toByteArray();
         assertEquals(data.length, size);
-        DeserializationStream ds = new DeserializationStream(data, new SerializationContext());
+        DeserializationStream ds = new DeserializationStream(data, new Serializer());
         ObjectSerializationMetadata m2 = new ObjectSerializationMetadata(ds, expected, classMapper);
         assertEquals(m2.getVersion().intValue(), version);
     }

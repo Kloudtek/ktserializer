@@ -9,96 +9,83 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.WeakHashMap;
+import java.util.HashMap;
 
 /**
  * Created by yannick on 12/09/2014.
  */
 public class Serializer {
-    private static final SerializationContext globalContext;
-    private static final ThreadLocal<SerializationContext> threadLocalContexts = new ThreadLocal<SerializationContext>();
-    static final WeakHashMap<Class<? extends Serializable>, ClassMapper> classMappersCache = new WeakHashMap<Class<? extends Serializable>, ClassMapper>();
+    protected final HashMap<String, Object> map = new HashMap<String, Object>();
+    private ClassMapper classMapper;
 
-    static {
-        globalContext = new SerializationContext();
+    public Serializer() {
     }
 
-    public static SerializationContext createThreadLocalContext() {
-        SerializationContext ctx = new SerializationContext(globalContext);
-        threadLocalContexts.set(ctx);
-        return ctx;
+    public Serializer(ClassMapper classMapper) {
+        this.classMapper = classMapper;
     }
 
-    public static void removeThreadLocalContext() {
-        threadLocalContexts.remove();
-    }
-
-    public static SerializationContext getThreadLocalContext() {
-        SerializationContext serializationContext = threadLocalContexts.get();
-        if (serializationContext != null) {
-            return serializationContext;
-        } else {
-            return globalContext;
-        }
-    }
-
-    public static SerializationContext getGlobalContext() {
-        return globalContext;
-    }
-
-    public static <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData) throws InstantiationException, InvalidSerializedDataException {
-        return deserialize(classType, serializedData, getThreadLocalContext(), null);
-    }
-
-    public static <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InstantiationException, InvalidSerializedDataException {
-        return deserialize(classType, serializedData, getThreadLocalContext(), classMapper);
-    }
-
-    public static <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
-        return deserialize(serializableObj, serializedData, getThreadLocalContext());
-    }
-
-    public static <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData, @NotNull SerializationContext context) throws InvalidSerializedDataException {
+    public <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
         try {
-            DeserializationStream ds = new DeserializationStream(serializedData, context);
+            DeserializationStream ds = new DeserializationStream(serializedData, this);
             return ds.readObject(serializableObj, false);
         } catch (IOException e) {
             throw new InvalidSerializedDataException(e);
         }
     }
 
-    public static <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData, @NotNull SerializationContext context, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
+    public <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return deserialize(classType, serializedData, null);
+    }
+
+    public <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
         try {
-            DeserializationStream ds = new DeserializationStream(serializedData, context);
-            return ds.readObject(classType, classMapper, false);
+            DeserializationStream ds = new DeserializationStream(serializedData, this);
+            return ds.readObject(classType, classMapper != null ? classMapper : this.classMapper, false);
         } catch (IOException e) {
             throw new InvalidSerializedDataException(e);
         }
     }
 
-    public static byte[] serialize(@NotNull Serializable object) {
-        return serialize(object, null, null);
+    public byte[] serialize(@NotNull Serializable object) {
+        return serialize(object, null);
     }
 
-    public static byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper) {
-        return serialize(object, null, classMapper);
-    }
-
-    public static byte[] serialize(@NotNull Serializable object, @Nullable SerializationContext context) {
-        return serialize(object, context, null);
-    }
-
-    public static byte[] serialize(@NotNull Serializable object, @Nullable SerializationContext context, @Nullable ClassMapper classMapper) {
+    public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper) {
         try {
-            if (context == null) {
-                context = Serializer.getThreadLocalContext();
-            }
-            SerializationStream os = new SerializationStream(context);
-            os.writeObject(object, classMapper, false);
+            SerializationStream os = new SerializationStream(this);
+            os.writeObject(object, classMapper != null ? classMapper : this.classMapper, false);
             return os.toByteArray();
         } catch (IOException e) {
             throw new UnexpectedException(e);
         }
+    }
+
+
+    public Serializer setInject(String key, Object value) {
+        map.put(key, value);
+        return this;
+    }
+
+    public Object getInject(String key) {
+        return getImpl(key);
+    }
+
+    public Serializer setInject(Object value) {
+        return setInject(value.getClass().getName(), value);
+    }
+
+    public Serializer setInject(Class<?> classType, Object value) {
+        map.put(classType.getName(), value);
+        return this;
+    }
+
+    public <X> X getInject(Class<X> classType) {
+        return classType.cast(getImpl(classType.getName()));
+    }
+
+    private Object getImpl(String key) {
+        return map.get(key);
     }
 
     public static ClassMapper getClassMapper(Class<? extends Serializable> classType) {

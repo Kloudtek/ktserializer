@@ -13,19 +13,21 @@ import java.io.IOException;
  * Created by yannick on 30/12/2014.
  */
 public class SerializationStream extends ByteArrayDataOutputStream {
-    private @NotNull SerializationContext context;
+    private
+    @NotNull
+    Serializer serializer;
     private ByteArrayDataOutputStream stream;
 
-    public SerializationStream(@NotNull SerializationContext context) throws IOException {
+    public SerializationStream(@NotNull Serializer serializer) throws IOException {
         super();
-        this.context = context;
+        this.serializer = serializer;
         // payload flags (nothing at the moment)
         write(0);
     }
 
     @NotNull
-    public SerializationContext getContext() {
-        return context;
+    public Serializer getSerializer() {
+        return serializer;
     }
 
     public void writeObject(Serializable serializable, ClassMapper classMapper) throws IOException {
@@ -37,7 +39,7 @@ public class SerializationStream extends ByteArrayDataOutputStream {
     }
 
     void writeObject(Serializable serializable, ClassMapper classMapper, boolean subStream) throws IOException {
-        SerializationStream ss = subStream ? new SerializationStream(context) : this;
+        SerializationStream ss = subStream ? new SerializationStream(serializer) : this;
         final ObjectSerializationMetadata metadata = new ObjectSerializationMetadata(
                 ((CustomSerializable) serializable).getVersion(), serializable.getClass(), classMapper);
         metadata.write(ss);

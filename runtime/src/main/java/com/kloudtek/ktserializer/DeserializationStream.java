@@ -16,11 +16,13 @@ import java.io.IOException;
 public class DeserializationStream extends ByteArrayDataInputStream {
     private final byte VERSIONED = 1;
     private final byte COMPRESSED = 2;
-    private @NotNull SerializationContext context;
+    private
+    @NotNull
+    Serializer serializer;
 
-    public DeserializationStream(@NotNull byte[] data, @NotNull SerializationContext context) throws InvalidSerializedDataException {
+    public DeserializationStream(@NotNull byte[] data, @NotNull Serializer serializer) throws InvalidSerializedDataException {
         super(data);
-        this.context = context;
+        this.serializer = serializer;
         try {
             byte flag = readByte();
         } catch (IOException e) {
@@ -29,8 +31,8 @@ public class DeserializationStream extends ByteArrayDataInputStream {
     }
 
     @NotNull
-    public SerializationContext getContext() {
-        return context;
+    public Serializer getSerializer() {
+        return serializer;
     }
 
     public byte[] readRemaining() {
@@ -50,7 +52,7 @@ public class DeserializationStream extends ByteArrayDataInputStream {
     }
 
     public <X extends Serializable> X readObject(X object, boolean subStream) throws IOException, InvalidSerializedDataException {
-        DeserializationStream ds = subStream ? new DeserializationStream(readData(), context) : this;
+        DeserializationStream ds = subStream ? new DeserializationStream(readData(), serializer) : this;
         Class<? extends Serializable> expectedClass = object.getClass();
         ObjectSerializationMetadata serializationMetadata = new ObjectSerializationMetadata(ds, expectedClass, null);
         if (!serializationMetadata.getClassType().equals(expectedClass)) {
@@ -69,7 +71,7 @@ public class DeserializationStream extends ByteArrayDataInputStream {
     }
 
     public <X extends Serializable> X readObject(Class<X> expectedClass, ClassMapper classMapper, boolean subStream) throws IOException, InvalidSerializedDataException {
-        DeserializationStream ds = subStream ? new DeserializationStream(readData(), context) : this;
+        DeserializationStream ds = subStream ? new DeserializationStream(readData(), serializer) : this;
         ObjectSerializationMetadata serializationMetadata = new ObjectSerializationMetadata(ds, expectedClass, classMapper);
         try {
             Serializable object = serializationMetadata.getClassType().newInstance();
