@@ -89,8 +89,9 @@ public class ObjectSerializationMetadataTest {
     }
 
     private void test(int version, int size, Class<? extends Serializable> expected, Class<? extends Serializable> actual, ClassMapper classMapper) throws IOException, InvalidSerializedDataException {
-        ObjectSerializationMetadata m1 = new ObjectSerializationMetadata(version, actual, classMapper);
-        SerializationStream ss = new SerializationStream(new Serializer());
+        Serializer serializer = new Serializer();
+        SerializationStream ss = new SerializationStream(serializer);
+        ObjectSerializationMetadata m1 = new ObjectSerializationMetadata(serializer, version, actual, classMapper);
         m1.write(ss);
         byte[] data = ss.toByteArray();
         assertEquals(data.length, size);

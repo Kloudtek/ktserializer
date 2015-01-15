@@ -87,7 +87,7 @@ public class Serializer {
         return map.get(key);
     }
 
-    public static ClassMapper getClassMapper(Class<? extends Serializable> classType) {
-        return null;
+    public ClassMapper getClassMapper() {
+        return classMapper;
     }
 }

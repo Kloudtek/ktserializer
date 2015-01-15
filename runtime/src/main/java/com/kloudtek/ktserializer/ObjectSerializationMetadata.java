@@ -62,7 +62,7 @@ public class ObjectSerializationMetadata {
         }
         if (classId != null) {
             if (classMapper == null) {
-                classMapper = Serializer.getClassMapper(expectedClassType);
+                classMapper = ds.getSerializer().getClassMapper();
                 if (classMapper == null) {
                     throw new InvalidSerializedDataException("Class id can't be mapped: " + classId);
                 }
@@ -81,7 +81,7 @@ public class ObjectSerializationMetadata {
         }
     }
 
-    public ObjectSerializationMetadata(Integer version, Class<? extends Serializable> classType, ClassMapper classMapper) {
+    public ObjectSerializationMetadata(Serializer serializer, Integer version, Class<? extends Serializable> classType, ClassMapper classMapper) {
         if (version != null) {
             long v = version;
             if (v < 0) {
@@ -93,15 +93,15 @@ public class ObjectSerializationMetadata {
         }
         this.classType = classType;
         if (classMapper == null) {
-            classMapper = Serializer.getClassMapper(classType);
+            classMapper = serializer.getClassMapper();
         }
         if (classMapper != null) {
             classId = classMapper.get(classType.getName());
         }
     }
 
-    public ObjectSerializationMetadata(Integer version, Class<? extends Serializable> classType) {
-        this(version, classType, null);
+    public ObjectSerializationMetadata(Serializer serializer, Integer version, Class<? extends Serializable> classType) {
+        this(serializer, version, classType, null);
     }
 
     public void write(SerializationStream ss) throws IOException {

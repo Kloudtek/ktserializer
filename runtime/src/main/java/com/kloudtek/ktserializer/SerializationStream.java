@@ -31,7 +31,7 @@ public class SerializationStream extends ByteArrayDataOutputStream {
     }
 
     public void writeObject(Serializable serializable, ClassMapper classMapper) throws IOException {
-        if( serializable instanceof CustomSerializable ) {
+        if (serializable instanceof CustomSerializable) {
             writeObject(serializable, classMapper, true);
         } else {
             throw new IllegalArgumentException("Only CustomSerializable supported at this time");
@@ -40,7 +40,7 @@ public class SerializationStream extends ByteArrayDataOutputStream {
 
     void writeObject(Serializable serializable, ClassMapper classMapper, boolean subStream) throws IOException {
         SerializationStream ss = subStream ? new SerializationStream(serializer) : this;
-        final ObjectSerializationMetadata metadata = new ObjectSerializationMetadata(
+        final ObjectSerializationMetadata metadata = new ObjectSerializationMetadata(ss.getSerializer(),
                 ((CustomSerializable) serializable).getVersion(), serializable.getClass(), classMapper);
         metadata.write(ss);
         ((CustomSerializable) serializable).serialize(ss);
