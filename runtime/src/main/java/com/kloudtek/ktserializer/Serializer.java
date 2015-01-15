@@ -61,7 +61,6 @@ public class Serializer {
         }
     }
 
-
     public Serializer setInject(String key, Object value) {
         map.put(key, value);
         return this;
