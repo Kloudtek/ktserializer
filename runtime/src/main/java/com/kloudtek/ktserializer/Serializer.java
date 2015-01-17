@@ -9,7 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by yannick on 12/09/2014.
@@ -17,6 +19,8 @@ import java.util.HashMap;
 public class Serializer {
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
     private ClassMapper classMapper;
+    private boolean disallowUnmappedClasses = false;
+    private int maxReadSize;
 
     public Serializer() {
     }
@@ -41,7 +45,42 @@ public class Serializer {
     public <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
         try {
             DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObject(classType, classMapper != null ? classMapper : this.classMapper, false);
+            return ds.readObject(classType, classMapper != null ? classMapper : this.classMapper);
+        } catch (IOException e) {
+            throw new InvalidSerializedDataException(e);
+        }
+    }
+
+    public Serializable deserialize(@NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return deserialize(serializedData, null);
+    }
+
+    public Serializable deserialize(@NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
+        try {
+            DeserializationStream ds = new DeserializationStream(serializedData, this);
+            return ds.readObject(classMapper != null ? classMapper : this.classMapper, null);
+        } catch (IOException e) {
+            throw new InvalidSerializedDataException(e);
+        }
+    }
+
+    public List<Serializable> deserializeList(@NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return deserializeList(serializedData, null);
+    }
+
+    public List<Serializable> deserializeList(@NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
+        try {
+            DeserializationStream ds = new DeserializationStream(serializedData, this);
+            return ds.readObjectList(classMapper != null ? classMapper : this.classMapper);
+        } catch (IOException e) {
+            throw new InvalidSerializedDataException(e);
+        }
+    }
+
+    public <S extends Serializable> List<S> deserializeList(@NotNull Class<S> classType, @NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
+        try {
+            DeserializationStream ds = new DeserializationStream(serializedData, this);
+            return ds.readObjectList(classType, classMapper != null ? classMapper : this.classMapper);
         } catch (IOException e) {
             throw new InvalidSerializedDataException(e);
         }
@@ -52,10 +91,32 @@ public class Serializer {
     }
 
     public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper) {
+        return serialize(object, classMapper, false);
+    }
+
+    public byte[] serialize(@NotNull List<? extends Serializable> list) {
+        return serialize(list, null);
+    }
+
+    public byte[] serialize(@NotNull List<? extends Serializable> list, @Nullable ClassMapper classMapper) {
+        return serialize(list, classMapper, false);
+    }
+
+    public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper, boolean compression) {
         try {
-            SerializationStream os = new SerializationStream(this);
-            os.writeObject(object, classMapper != null ? classMapper : this.classMapper, false);
-            return os.toByteArray();
+            SerializationStream os = new SerializationStream(this, compression);
+            os.writeObject(object, classMapper != null ? classMapper : this.classMapper, false, null);
+            return os.closeAndReturnData();
+        } catch (IOException e) {
+            throw new UnexpectedException(e);
+        }
+    }
+
+    public byte[] serialize(@NotNull Collection<? extends Serializable> collection, @Nullable ClassMapper classMapper, boolean compression) {
+        try {
+            SerializationStream os = new SerializationStream(this, compression);
+            os.writeObjectList(collection, classMapper != null ? classMapper : this.classMapper, false);
+            return os.closeAndReturnData();
         } catch (IOException e) {
             throw new UnexpectedException(e);
         }
@@ -89,5 +150,26 @@ public class Serializer {
 
     public ClassMapper getClassMapper() {
         return classMapper;
+    }
+
+    public boolean isDisallowUnmappedClasses() {
+        return disallowUnmappedClasses;
+    }
+
+    public void setDisallowUnmappedClasses(boolean disallowUnmappedClasses) {
+        this.disallowUnmappedClasses = disallowUnmappedClasses;
+    }
+
+    /**
+     * Set the size limit on serialized payloads to read (defaults to 10K - 10240 bytes
+     *
+     * @return
+     */
+    public int getMaxReadSize() {
+        return maxReadSize;
+    }
+
+    public void setMaxReadSize(int maxReadSize) {
+        this.maxReadSize = maxReadSize;
     }
 }

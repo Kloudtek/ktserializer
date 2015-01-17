@@ -4,7 +4,6 @@
 
 package com.kloudtek.ktserializer;
 
-import com.kloudtek.util.UnexpectedException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -28,16 +27,5 @@ public abstract class AbstractCustomSerializable implements CustomSerializable {
     @Override
     public int getVersion() {
         return 0;
-    }
-
-    @NotNull
-    public byte[] serialize(@NotNull Serializer serializer) {
-        try {
-            SerializationStream os = new SerializationStream(serializer);
-            serialize(os);
-            return os.toByteArray();
-        } catch (IOException e) {
-            throw new UnexpectedException(e);
-        }
     }
 }

@@ -42,7 +42,7 @@ public class SimpleClassMapper implements ClassMapper {
     }
 
     @Override
-    public int get(String classType) {
+    public Integer get(String classType) {
         return reverseMap.get(classType);
     }
 }

@@ -10,5 +10,5 @@ package com.kloudtek.ktserializer;
 public interface ClassMapper {
     String get(int classId);
 
-    int get(String classType);
+    Integer get(String classType);
 }
