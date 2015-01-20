@@ -19,17 +19,22 @@ public class SimpleClassMapper implements ClassMapper {
         int len = classes.length;
         classNames = new String[len];
         for (int i = 0; i < len; i++) {
-            String name = classes[i].getName();
-            classNames[i] = name;
-            reverseMap.put(name, i);
+            Class<?> cl = classes[i];
+            if (cl != null) {
+                String name = cl.getName();
+                classNames[i] = name;
+                reverseMap.put(name, i);
+            }
         }
     }
 
-    public SimpleClassMapper(String[] classNames) {
+    public SimpleClassMapper(String... classNames) {
         this.classNames = classNames;
         int len = classNames.length;
         for (int i = 0; i < len; i++) {
-            reverseMap.put(classNames[i], i);
+            if (classNames[i] != null) {
+                reverseMap.put(classNames[i], i);
+            }
         }
     }
 
