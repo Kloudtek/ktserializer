@@ -65,7 +65,7 @@ public class ObjectSerializationMetadata {
             switch (classFlags) {
                 case CLASS_DYNAMIC:
                     if (ds.getSerializer().isDisallowUnmappedClasses()) {
-                        throw new InvalidSerializedDataException("Dynamic classes are not allowed");
+                        throw new InvalidSerializedDataException("Dynamic classes are not allowed: "+ds.readUTF());
                     }
                     className = ds.readUTF();
                     break;
