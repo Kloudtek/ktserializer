@@ -41,7 +41,7 @@ public class SimpleClassMapper implements ClassMapper {
     @Override
     public String get(int classId) {
         if (classId < 0 || classId > classNames.length) {
-            throw new IllegalArgumentException("Invalid class id: " + classId);
+            return null;
         }
         return classNames[classId];
     }
