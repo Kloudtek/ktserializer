@@ -8,7 +8,7 @@ package com.kloudtek.ktserializer;
  * Created by yannick on 13/01/2015.
  */
 public interface ClassMapper {
-    String get(int classId);
+    String get(int libraryId, int classId);
 
-    Integer get(String classType);
+    ClassId get(String classType);
 }

@@ -4,7 +4,9 @@
 
 package com.kloudtek.ktserializer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
@@ -12,42 +14,61 @@ import java.util.HashMap;
  * downside of this approach is it's lack of flexibility and extensibility. Also be careful not to change
  */
 public class SimpleClassMapper implements ClassMapper {
-    private final String[] classNames;
-    private HashMap<String, Integer> reverseMap = new HashMap<String, Integer>();
+    private final ArrayList<ArrayList<String>> libraryClasses = new ArrayList<ArrayList<String>>();
+    private final HashMap<ClassId, String> classIdToName = new HashMap<ClassId, String>();
+    private final HashMap<String, ClassId> nameToClassId = new HashMap<String, ClassId>();
+
+    public SimpleClassMapper() {
+        this(Serializer.defaultLibrary);
+    }
 
     public SimpleClassMapper(Class<?>... classes) {
-        int len = classes.length;
-        classNames = new String[len];
-        for (int i = 0; i < len; i++) {
-            Class<?> cl = classes[i];
-            if (cl != null) {
-                String name = cl.getName();
-                classNames[i] = name;
-                reverseMap.put(name, i);
-            }
-        }
-    }
-
-    public SimpleClassMapper(String... classNames) {
-        this.classNames = classNames;
-        int len = classNames.length;
-        for (int i = 0; i < len; i++) {
-            if (classNames[i] != null) {
-                reverseMap.put(classNames[i], i);
-            }
-        }
+        registerLibrary(0, classes);
     }
 
     @Override
-    public String get(int classId) {
-        if (classId < 0 || classId > classNames.length) {
-            return null;
-        }
-        return classNames[classId];
+    public String get(int libraryId, int classId) {
+        return classIdToName.get(new ClassId(libraryId, classId));
     }
 
     @Override
-    public Integer get(String classType) {
-        return reverseMap.get(classType);
+    public ClassId get(String classType) {
+        return nameToClassId.get(classType);
+    }
+
+    /**
+     * Register class library.
+     *
+     * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
+     * @param classes Classes for that library
+     */
+    public void registerLibrary(int number, List<String> classes) {
+        if (number != libraryClasses.size()) {
+            throw new IllegalArgumentException("Serialization library registration number " + number
+                    + " does not match " + libraryClasses.size() + 1);
+        }
+        ArrayList<String> list = new ArrayList<String>(classes);
+        for (int i = 0; i < classes.size(); i++) {
+            String className = classes.get(i);
+            list.add(className);
+            ClassId classId = new ClassId(number, i);
+            classIdToName.put(classId, className);
+            nameToClassId.put(className, classId);
+        }
+        libraryClasses.add(list);
+    }
+
+    /**
+     * Register class library.
+     *
+     * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
+     * @param classes Classes for that library
+     */
+    public void registerLibrary(int number, Class<?>... classes) {
+        ArrayList<String> classNames = new ArrayList<String>();
+        for (Class<?> cl : classes) {
+            classNames.add(cl.getName());
+        }
+        registerLibrary(number, classNames);
     }
 }

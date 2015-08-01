@@ -17,12 +17,16 @@ import java.util.List;
  * Created by yannick on 12/09/2014.
  */
 public class Serializer {
+    static final Class<?>[] defaultLibrary = new Class[]{SerializableList.class};
+    private static SimpleClassMapper globalClassMapper = new SimpleClassMapper();
+    private static final Serializer globalInstance = new Serializer(globalClassMapper);
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
-    private ClassMapper classMapper;
-    private boolean disallowUnmappedClasses = false;
-    private int maxReadSize;
+    protected ClassMapper classMapper;
+    protected boolean disallowUnmappedClasses = false;
+    protected int maxReadSize;
 
     public Serializer() {
+        this(globalClassMapper);
     }
 
     public Serializer(ClassMapper classMapper) {
@@ -90,32 +94,28 @@ public class Serializer {
         return serialize(object, null);
     }
 
-    public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper) {
-        return serialize(object, classMapper, false);
-    }
-
     public byte[] serialize(@NotNull List<? extends Serializable> list) {
-        return serialize(list, null);
+        return serializeList(list, null);
     }
 
     public byte[] serialize(@NotNull List<? extends Serializable> list, @Nullable ClassMapper classMapper) {
-        return serialize(list, classMapper, false);
+        return serializeList(list, classMapper);
     }
 
-    public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper, boolean compression) {
+    public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper) {
         try {
-            SerializationStream os = new SerializationStream(this, compression);
-            os.writeObject(object, classMapper != null ? classMapper : this.classMapper, false, null);
+            SerializationStream os = new SerializationStream(this);
+            os.writeObject(object, classMapper != null ? classMapper : this.classMapper);
             return os.closeAndReturnData();
         } catch (IOException e) {
             throw new UnexpectedException(e);
         }
     }
 
-    public byte[] serialize(@NotNull Collection<? extends Serializable> collection, @Nullable ClassMapper classMapper, boolean compression) {
+    public byte[] serializeList(@NotNull Collection<? extends Serializable> collection, @Nullable ClassMapper classMapper) {
         try {
-            SerializationStream os = new SerializationStream(this, compression);
-            os.writeObjectList(collection, classMapper != null ? classMapper : this.classMapper, false);
+            SerializationStream os = new SerializationStream(this);
+            os.writeObjectList(collection, classMapper != null ? classMapper : this.classMapper);
             return os.closeAndReturnData();
         } catch (IOException e) {
             throw new UnexpectedException(e);
@@ -161,9 +161,9 @@ public class Serializer {
     }
 
     /**
-     * Set the size limit on serialized payloads to read (defaults to 10K - 10240 bytes
+     * Set the size limit on serialized payloads to read (defaults to 10K/10240 bytes)
      *
-     * @return
+     * @return size limit
      */
     public int getMaxReadSize() {
         return maxReadSize;
@@ -171,5 +171,9 @@ public class Serializer {
 
     public void setMaxReadSize(int maxReadSize) {
         this.maxReadSize = maxReadSize;
+    }
+
+    public static Serializer global() {
+        return globalInstance;
     }
 }

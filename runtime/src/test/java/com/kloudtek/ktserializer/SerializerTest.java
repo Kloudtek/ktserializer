@@ -7,6 +7,7 @@ package com.kloudtek.ktserializer;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
@@ -16,9 +17,20 @@ public class SerializerTest {
     private Serializer serializer = new Serializer();
 
     @Test
-    public void simpleCustomSerialization() throws InvalidSerializedDataException {
+    public void simpleCustomSerializationDynaClass() throws InvalidSerializedDataException {
         SimpleTestObj o1 = new SimpleTestObj();
         Serializer serializer = this.serializer;
+        byte[] serialized = serializer.serialize(o1);
+        Serializable o2 = serializer.deserialize(serialized);
+        assertEquals(o2, o1);
+    }
+
+    @Test
+    public void simpleCustomSerializationRegClass() throws InvalidSerializedDataException {
+        SimpleTestObj o1 = new SimpleTestObj();
+        SimpleClassMapper classMapper = new SimpleClassMapper();
+        classMapper.registerLibrary(1, Collections.singletonList(SimpleTestObj.class.getName()));
+        Serializer serializer = new Serializer(classMapper);
         byte[] serialized = serializer.serialize(o1);
         Serializable o2 = serializer.deserialize(serialized);
         assertEquals(o2, o1);
@@ -49,14 +61,14 @@ public class SerializerTest {
         assertEquals(o2, o1);
     }
 
-    @Test
-    public void simpleLargeCompressedCustomSerialization() throws InvalidSerializedDataException {
-        LargeTestObj o1 = new LargeTestObj((byte) 5);
-        byte[] serialized = serializer.serialize(o1, null, true);
-        assertTrue(serialized.length < 500);
-        Serializable o2 = serializer.deserialize(serialized);
-        assertEquals(o2, o1);
-    }
+//    @Test
+//    public void simpleLargeCompressedCustomSerialization() throws InvalidSerializedDataException {
+//        LargeTestObj o1 = new LargeTestObj((byte) 5);
+//        byte[] serialized = serializer.serialize(o1, null);
+//        assertTrue(serialized.length < 500);
+//        Serializable o2 = serializer.deserialize(serialized);
+//        assertEquals(o2, o1);
+//    }
 
     @Test
     public void emptyList() throws InvalidSerializedDataException {
@@ -69,11 +81,11 @@ public class SerializerTest {
 
     @Test
     public void simpleList() throws InvalidSerializedDataException {
-        ArrayList<SimpleTestObj> o1 = new ArrayList<SimpleTestObj>();
-        o1.add(new SimpleTestObj());
-        byte[] data = serializer.serialize(o1);
-        List<SimpleTestObj> o2 = serializer.deserializeList(SimpleTestObj.class, data, null);
-        assertEquals(o2, o1);
+        ArrayList<SimpleTestObj> l1 = new ArrayList<SimpleTestObj>();
+        l1.add(new SimpleTestObj());
+        byte[] data = serializer.serialize(l1);
+        List<SimpleTestObj> l2 = serializer.deserializeList(SimpleTestObj.class, data, null);
+        assertEquals(l2, l1);
     }
 
     @Test
@@ -90,16 +102,16 @@ public class SerializerTest {
         assertEquals(o2, o1);
     }
 
-    @Test
-    public void compressedComplexList() throws InvalidSerializedDataException {
-        ArrayList<Serializable> o1 = new ArrayList<Serializable>();
-        o1.add(new SimpleTestObj());
-        o1.add(new CompositeTestObject());
-        o1.add(new MultiLvlCompositeTestObject());
-        o1.add(new LargeTestObj());
-        byte[] data = serializer.serialize(o1, null, true);
-        assertTrue(data.length < 750);
-        List<SimpleTestObj> o2 = serializer.deserializeList(SimpleTestObj.class, data, null);
-        assertEquals(o2, o1);
-    }
+//    @Test
+//    public void compressedComplexList() throws InvalidSerializedDataException {
+//        ArrayList<Serializable> o1 = new ArrayList<Serializable>();
+//        o1.add(new SimpleTestObj());
+//        o1.add(new CompositeTestObject());
+//        o1.add(new MultiLvlCompositeTestObject());
+//        o1.add(new LargeTestObj());
+//        byte[] data = serializer.serialize(o1);
+//        assertTrue(data.length < 750);
+//        List<SimpleTestObj> o2 = serializer.deserializeList(SimpleTestObj.class, data, null);
+//        assertEquals(o2, o1);
+//    }
 }
