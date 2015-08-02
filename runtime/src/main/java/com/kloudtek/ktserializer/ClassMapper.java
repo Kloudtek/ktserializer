@@ -25,7 +25,7 @@ public class ClassMapper {
 
     public ClassMapper(Class<?>... classes) {
         this();
-        registerLibrary(1, defaultClasses);
+        registerLibrary(1, classes);
     }
 
     public String get(int libraryId, int classId) {
