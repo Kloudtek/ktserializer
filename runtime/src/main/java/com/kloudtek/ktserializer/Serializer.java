@@ -17,7 +17,6 @@ import java.util.List;
  * Created by yannick on 12/09/2014.
  */
 public class Serializer {
-    static final Class<?>[] defaultLibrary = new Class[]{SerializableList.class};
     private static ClassMapper globalClassMapper = new ClassMapper();
     private static final Serializer globalInstance = new Serializer(globalClassMapper);
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
