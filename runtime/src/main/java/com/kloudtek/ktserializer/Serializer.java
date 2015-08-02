@@ -35,7 +35,7 @@ public class Serializer {
     public <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
         try {
             DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObject(serializableObj, false);
+            return ds.readObject(serializableObj);
         } catch (IOException e) {
             throw new InvalidSerializedDataException(e);
         }

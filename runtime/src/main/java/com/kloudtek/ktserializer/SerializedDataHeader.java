@@ -24,6 +24,9 @@ public class SerializedDataHeader {
 
     @SuppressWarnings({"ConstantConditions", "unchecked"})
     public SerializedDataHeader(DeserializationStream ds, ClassMapper classMapper, Class<? extends Serializable> forcedClass) throws IOException, InvalidSerializedDataException {
+        if (classMapper == null) {
+            classMapper = ds.getSerializer().getClassMapper();
+        }
         String className;
         version = (int) ds.readUnsignedNumber();
         if (forcedClass == null) {

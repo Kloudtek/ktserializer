@@ -37,17 +37,12 @@ public class DeserializationStream extends DataInputStream {
     }
 
     public <X extends Serializable> X readObject(X object) throws IOException, InvalidSerializedDataException {
-        return readObject(object, true);
-    }
-
-    public <X extends Serializable> X readObject(X object, boolean subStream) throws IOException, InvalidSerializedDataException {
-        DeserializationStream ds = subStream ? new DeserializationStream(readData(), serializer) : this;
         Class<? extends Serializable> expectedClass = object.getClass();
-        SerializedDataHeader serializationMetadata = new SerializedDataHeader(ds, null);
+        SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, null);
         if (!serializationMetadata.getClassType().equals(expectedClass)) {
             throw new InvalidSerializedDataException("Object data of class " + serializationMetadata.getClassType().getName() + " does not match expected " + expectedClass.getName());
         }
-        deserialize(object, serializationMetadata, ds);
+        deserialize(object, serializationMetadata, this);
         return object;
     }
 
