@@ -28,7 +28,7 @@ public class SerializerTest {
     @Test
     public void simpleCustomSerializationRegClass() throws InvalidSerializedDataException {
         SimpleTestObj o1 = new SimpleTestObj();
-        SimpleClassMapper classMapper = new SimpleClassMapper();
+        ClassMapper classMapper = new ClassMapper();
         classMapper.registerLibrary(1, Collections.singletonList(SimpleTestObj.class.getName()));
         Serializer serializer = new Serializer(classMapper);
         byte[] serialized = serializer.serialize(o1);

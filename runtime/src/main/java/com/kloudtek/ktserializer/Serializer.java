@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class Serializer {
     static final Class<?>[] defaultLibrary = new Class[]{SerializableList.class};
-    private static SimpleClassMapper globalClassMapper = new SimpleClassMapper();
+    private static ClassMapper globalClassMapper = new ClassMapper();
     private static final Serializer globalInstance = new Serializer(globalClassMapper);
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
     protected ClassMapper classMapper;
@@ -173,7 +173,16 @@ public class Serializer {
         this.maxReadSize = maxReadSize;
     }
 
+
     public static Serializer global() {
         return globalInstance;
+    }
+
+    public static void registerLibrary(int number, List<String> classes) {
+        globalClassMapper.registerLibrary(number, classes);
+    }
+
+    public static void registerLibrary(int number, Class<?>... classes) {
+        globalClassMapper.registerLibrary(number, classes);
     }
 }

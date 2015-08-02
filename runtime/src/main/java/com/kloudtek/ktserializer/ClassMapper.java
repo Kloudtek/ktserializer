@@ -4,11 +4,69 @@
 
 package com.kloudtek.ktserializer;
 
-/**
- * Created by yannick on 13/01/2015.
- */
-public interface ClassMapper {
-    String get(int libraryId, int classId);
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-    ClassId get(String classType);
+/**
+ * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
+ * This is a easy and simple way to specify mappings between an number (unsigned short) and class types. Naturally the
+ * downside of this approach is it's lack of flexibility and extensibility. Also be careful not to change
+ */
+public class ClassMapper {
+    private final ArrayList<ArrayList<String>> libraryClasses = new ArrayList<ArrayList<String>>();
+    private final HashMap<ClassId, String> classIdToName = new HashMap<ClassId, String>();
+    private final HashMap<String, ClassId> nameToClassId = new HashMap<String, ClassId>();
+
+    public ClassMapper() {
+        this(Serializer.defaultLibrary);
+    }
+
+    public ClassMapper(Class<?>... classes) {
+        registerLibrary(0, classes);
+    }
+
+    public String get(int libraryId, int classId) {
+        return classIdToName.get(new ClassId(libraryId, classId));
+    }
+
+    public ClassId get(String classType) {
+        return nameToClassId.get(classType);
+    }
+
+    /**
+     * Register class library.
+     *
+     * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
+     * @param classes Classes for that library
+     */
+    public void registerLibrary(int number, List<String> classes) {
+        if (number != libraryClasses.size()) {
+            throw new IllegalArgumentException("Serialization library registration number " + number
+                    + " does not match " + libraryClasses.size() + 1);
+        }
+        ArrayList<String> list = new ArrayList<String>(classes);
+        for (int i = 0; i < classes.size(); i++) {
+            String className = classes.get(i);
+            list.add(className);
+            ClassId classId = new ClassId(number, i);
+            classIdToName.put(classId, className);
+            nameToClassId.put(className, classId);
+        }
+        libraryClasses.add(list);
+    }
+
+    /**
+     * Register class library.
+     *
+     * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
+     * @param classes Classes for that library
+     */
+    public void registerLibrary(int number, Class<?>... classes) {
+        ArrayList<String> classNames = new ArrayList<String>();
+        for (Class<?> cl : classes) {
+            classNames.add(cl.getName());
+        }
+        registerLibrary(number, classNames);
+    }
 }
