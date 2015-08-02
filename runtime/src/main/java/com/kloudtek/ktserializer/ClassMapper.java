@@ -10,7 +10,8 @@ import java.util.List;
 
 /**
  * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
- * This is a easy and simple way to specify mappings between an number (unsigned short) and class types.
+ * This is a easy and simple way to specify mappings between an number (unsigned short) and class types. Naturally the
+ * downside of this approach is it's lack of flexibility and extensibility. Also be careful not to change
  */
 public class ClassMapper {
     static final Class<?>[] defaultClasses = new Class[]{SerializableList.class};
@@ -20,6 +21,11 @@ public class ClassMapper {
 
     public ClassMapper() {
         registerLibrary(0, defaultClasses);
+    }
+
+    public ClassMapper(Class<?>... classes) {
+        this();
+        registerLibrary(1, defaultClasses);
     }
 
     public String get(int libraryId, int classId) {
