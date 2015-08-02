@@ -47,7 +47,7 @@ public class ClassMapper {
             throw new IllegalArgumentException("Serialization library registration number " + number
                     + " does not match " + libraryClasses.size() + 1);
         }
-        ArrayList<String> list = new ArrayList<String>(classes);
+        ArrayList<String> list = new ArrayList<String>(classes.size());
         for (int i = 0; i < classes.size(); i++) {
             String className = classes.get(i);
             list.add(className);
