@@ -43,19 +43,12 @@
                 </configuration>
             </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.springframework.build</groupId>
-                <artifactId>aws-maven</artifactId>
-                <version>5.0.0.RELEASE</version>
-            </extension>
-        </extensions>
     </build>
     <repositories>
         <repository>
             <id>kloudtek-oss-releases</id>
             <name>Kloudtek OSS releases</name>
-            <url>https://s3.amazonaws.com/maven.kloudtek.com/release</url>
+            <url>${repo.oss.release.url}</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -66,7 +59,7 @@
         <repository>
             <id>kloudtek-oss-snapshots</id>
             <name>Kloudtek OSS snapshots</name>
-            <url>https://s3.amazonaws.com/maven.kloudtek.com/snapshot</url>
+            <url>${repo.oss.snapshot.url}</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
@@ -90,7 +83,7 @@
         <pluginRepository>
             <id>kloudtek-oss-releases</id>
             <name>Kloudtek OSS releases</name>
-            <url>https://s3.amazonaws.com/maven.kloudtek.com/release</url>
+            <url>${repo.oss.release.url}</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -101,7 +94,7 @@
         <pluginRepository>
             <id>kloudtek-oss-snapshots</id>
             <name>Kloudtek OSS snapshots</name>
-            <url>https://s3.amazonaws.com/maven.kloudtek.com/snapshot</url>
+            <url>${repo.oss.snapshot.url}</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
@@ -124,13 +117,13 @@
     <distributionManagement>
         <repository>
             <id>kloudtek-oss-releases</id>
-            <name>Kloudtek OSS releases</name>
-            <url>s3://maven.kloudtek.com/release</url>
+            <name>Kloudtek OSS Releases Repository</name>
+            <url>${repo.oss.release.url}</url>
         </repository>
         <snapshotRepository>
             <id>kloudtek-oss-snapshots</id>
-            <name>Kloudtek OSS snapshots</name>
-            <url>s3://maven.kloudtek.com/snapshot</url>
+            <name>Kloudtek OSS Snapshots Repository</name>
+            <url>${repo.oss.snapshot.url}</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
