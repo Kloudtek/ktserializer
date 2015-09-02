@@ -6,6 +6,7 @@ package com.kloudtek.ktserializer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -18,6 +19,7 @@ public class ClassMapper {
     private final ArrayList<ArrayList<String>> libraryClasses = new ArrayList<ArrayList<String>>();
     private final HashMap<ClassId, String> classIdToName = new HashMap<ClassId, String>();
     private final HashMap<String, ClassId> nameToClassId = new HashMap<String, ClassId>();
+    private HashSet<Integer> libNb = new HashSet<Integer>();
 
     public ClassMapper() {
         registerLibrary(0, defaultClasses);
@@ -42,8 +44,8 @@ public class ClassMapper {
      * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
      * @param classes Classes for that library
      */
-    public void registerLibrary(int number, List<String> classes) {
-        if (number != libraryClasses.size()) {
+    public synchronized void registerLibrary(int number, List<String> classes) {
+        if (libNb.contains(number)) {
             throw new IllegalArgumentException("Serialization library registration number " + number
                     + " does not match " + libraryClasses.size() + 1);
         }
@@ -56,6 +58,7 @@ public class ClassMapper {
             nameToClassId.put(className, classId);
         }
         libraryClasses.add(list);
+        libNb.add(number);
     }
 
     /**
