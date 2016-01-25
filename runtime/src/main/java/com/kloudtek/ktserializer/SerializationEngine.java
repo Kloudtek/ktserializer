@@ -18,7 +18,7 @@ import java.util.List;
 public class SerializationEngine {
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
     protected ClassMapper classMapper;
-    protected boolean disallowUnmappedClasses = true;
+    protected boolean unmappedClassesAllowed = false;
     protected int maxReadSize;
 
     public SerializationEngine() {
@@ -150,12 +150,12 @@ public class SerializationEngine {
         return classMapper;
     }
 
-    public boolean isDisallowUnmappedClasses() {
-        return disallowUnmappedClasses;
+    public boolean isUnmappedClassesAllowed() {
+        return unmappedClassesAllowed;
     }
 
-    public void setDisallowUnmappedClasses(boolean disallowUnmappedClasses) {
-        this.disallowUnmappedClasses = disallowUnmappedClasses;
+    public void setUnmappedClassesAllowed(boolean unmappedClassesAllowed) {
+        this.unmappedClassesAllowed = unmappedClassesAllowed;
     }
 
     /**

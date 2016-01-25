@@ -137,12 +137,12 @@ public class Serializer {
         return globalInstance.deserializeList(serializedData);
     }
 
-    public static void setDisallowUnmappedClasses(boolean disallowUnmappedClasses) {
-        globalInstance.setDisallowUnmappedClasses(disallowUnmappedClasses);
+    public static void setUnmappedClassesAllowed(boolean disallowUnmappedClasses) {
+        globalInstance.setUnmappedClassesAllowed(disallowUnmappedClasses);
     }
 
-    public static boolean isDisallowUnmappedClasses() {
-        return globalInstance.isDisallowUnmappedClasses();
+    public static boolean isUnmappedClassesAllowed() {
+        return globalInstance.isUnmappedClassesAllowed();
     }
 
     public static Serializable deserialize(@NotNull byte[] serializedData) throws InvalidSerializedDataException {

@@ -44,7 +44,7 @@ public class SerializedDataHeader {
             int classId = (int) ds.readUnsignedNumber();
             if (classId == 0) {
                 className = ds.readUTF();
-                if (ds.getSerializer().isDisallowUnmappedClasses()) {
+                if (!ds.getSerializer().isUnmappedClassesAllowed()) {
                     throw new InvalidSerializedDataException("Dynamic classes are not allowed: " + className);
                 }
             } else {
@@ -89,7 +89,7 @@ public class SerializedDataHeader {
         if (classMapper != null) {
             classId = classMapper.get(classType.getName());
         }
-        if (!specificClass && serializationStream.getSerializer().isDisallowUnmappedClasses() && classId == null) {
+        if (!specificClass && !serializationStream.getSerializer().isUnmappedClassesAllowed() && classId == null) {
             throw new IllegalArgumentException("Serialization of un-mapped classes is disallowed: " + classType.getName());
         }
     }

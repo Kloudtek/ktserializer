@@ -24,6 +24,7 @@ public class SerializerTest {
 
     @Test
     public void simpleCustomSerializationDynaClass() throws InvalidSerializedDataException {
+        serializer.setUnmappedClassesAllowed(true);
         SimpleTestObj o1 = new SimpleTestObj();
         byte[] serialized = serializer.serialize(o1);
         Serializable o2 = serializer.deserialize(serialized);
@@ -33,7 +34,6 @@ public class SerializerTest {
     @Test
     public void simpleCustomSerializationSpecific() throws InvalidSerializedDataException {
         SimpleTestObj o1 = new SimpleTestObj();
-        serializer.setDisallowUnmappedClasses(true);
         byte[] serialized = serializer.serializeSpecific(o1);
         Serializable o2 = serializer.deserializeSpecific(SimpleTestObj.class, serialized);
         assertEquals(o2, o1);
@@ -57,7 +57,6 @@ public class SerializerTest {
     }
 
     private void simpleLibTest(Serializable obj) throws IOException, InvalidSerializedDataException {
-        serializer.setDisallowUnmappedClasses(true);
         byte[] serialized = serializer.serialize(obj);
         Serializable dobj = serializer.deserialize(serialized);
         assertEquals(dobj, obj);
@@ -82,6 +81,7 @@ public class SerializerTest {
 
     @Test
     public void simpleCustomCompositeCustomSerialization() throws InvalidSerializedDataException {
+        serializer.setUnmappedClassesAllowed(true);
         CompositeTestObject o1 = new CompositeTestObject();
         byte[] serialized = serializer.serialize(o1);
         Serializable o2 = serializer.deserialize(serialized);
@@ -90,6 +90,7 @@ public class SerializerTest {
 
     @Test
     public void simpleCustomMultiLvlCompositeCustomSerialization() throws InvalidSerializedDataException {
+        serializer.setUnmappedClassesAllowed(true);
         MultiLvlCompositeTestObject o1 = new MultiLvlCompositeTestObject();
         byte[] serialized = serializer.serialize(o1);
         Serializable o2 = serializer.deserialize(serialized);
@@ -98,6 +99,7 @@ public class SerializerTest {
 
     @Test
     public void simpleLargeCustomSerialization() throws InvalidSerializedDataException {
+        serializer.setUnmappedClassesAllowed(true);
         LargeTestObj o1 = new LargeTestObj((byte) 5);
         byte[] serialized = serializer.serialize(o1);
         assertTrue(serialized.length > 5000);
@@ -125,6 +127,7 @@ public class SerializerTest {
 
     @Test
     public void simpleList() throws InvalidSerializedDataException {
+        serializer.setUnmappedClassesAllowed(true);
         ArrayList<SimpleTestObj> l1 = new ArrayList<SimpleTestObj>();
         l1.add(new SimpleTestObj());
         byte[] data = serializer.serializeList(l1);
@@ -134,6 +137,7 @@ public class SerializerTest {
 
     @Test
     public void complexList() throws InvalidSerializedDataException {
+        serializer.setUnmappedClassesAllowed(true);
         ArrayList<Serializable> o1 = new ArrayList<Serializable>();
         o1.add(new SimpleTestObj());
         o1.add(new CompositeTestObject());
