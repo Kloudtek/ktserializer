@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -18,27 +18,23 @@ import java.util.List;
  */
 public class DeserializationStream extends DataInputStream {
     @NotNull
-    private Serializer serializer;
+    private SerializationEngine serializer;
 
-    public DeserializationStream(@NotNull byte[] data, @NotNull Serializer serializer) throws InvalidSerializedDataException {
+    public DeserializationStream(@NotNull byte[] data, @NotNull SerializationEngine serializer) throws InvalidSerializedDataException {
         super(new ByteArrayInputStream(data));
         this.serializer = serializer;
         try {
             // no flags in use at the moment
-            byte flags = readByte();
+            long flags = readUnsignedNumber();
         } catch (IOException e) {
             throw new InvalidSerializedDataException(e);
         }
     }
 
     @NotNull
-    public Serializer getSerializer() {
-        return serializer;
-    }
-
-    public <X extends Serializable> X readObject(X object) throws IOException, InvalidSerializedDataException {
+    private <X extends Serializable> X readObject(X object, boolean specific) throws IOException, InvalidSerializedDataException {
         Class<? extends Serializable> expectedClass = object.getClass();
-        SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, null);
+        SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, serializer.getClassMapper(), specific ? object.getClass() : null);
         if (!serializationMetadata.getClassType().equals(expectedClass)) {
             throw new InvalidSerializedDataException("Object data of class " + serializationMetadata.getClassType().getName() + " does not match expected " + expectedClass.getName());
         }
@@ -46,42 +42,69 @@ public class DeserializationStream extends DataInputStream {
         return object;
     }
 
-    public Serializable readObject() throws IOException, InvalidSerializedDataException {
-        return readObject(serializer.getClassMapper(), null);
+    @NotNull
+    Serializable readObject() throws IOException, InvalidSerializedDataException {
+        SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, serializer.getClassMapper(), null);
+        try {
+            Serializable object = serializationMetadata.getClassType().newInstance();
+            deserialize(object, serializationMetadata, this);
+            return object;
+        } catch (InstantiationException e) {
+            throw new InvalidSerializedDataException("Unable to create serialized class " + serializationMetadata.getClassType().getName() + ": " + e.getMessage(), e);
+        } catch (IllegalAccessException e) {
+            throw new InvalidSerializedDataException("Unable to create serialized class " + serializationMetadata.getClassType().getName() + ": " + e.getMessage(), e);
+        }
+    }
+
+    @NotNull
+    public SerializationEngine getSerializer() {
+        return serializer;
+    }
+
+    public <X extends Serializable> X readObject(X object) throws IOException, InvalidSerializedDataException {
+        return readObject(object, false);
+    }
+
+    public <X extends Serializable> X readSpecificObject(X object) throws IOException, InvalidSerializedDataException {
+        return readObject(object, true);
     }
 
     public <X extends Serializable> X readObject(Class<X> expectedClass) throws IOException, InvalidSerializedDataException {
-        return readObject(expectedClass, null);
-    }
-
-    <X extends Serializable> X readObject(Class<X> expectedClass, ClassMapper classMapper) throws IOException, InvalidSerializedDataException {
-        Serializable obj = readObject(classMapper, null);
+        Serializable obj = readObject();
         if (!expectedClass.isInstance(obj)) {
-            throw new IllegalArgumentException("Invalid class deserialized " + obj.getClass().getName());
+            throw new IllegalArgumentException("Invalid class deserialized " + obj.getClass().getName() + " is not " + expectedClass.getName());
         }
         return expectedClass.cast(obj);
     }
 
     public <X extends Serializable> List<X> readObjectList(Class<X> expectedClass) throws IOException, InvalidSerializedDataException {
-        return readObjectList(expectedClass, null);
+        ArrayList<X> list = new ArrayList<X>();
+        for (Serializable obj : readSpecificObject(SerializableList.class)) {
+            try {
+                list.add(expectedClass.cast(obj));
+            } catch (ClassCastException e) {
+                throw new IllegalArgumentException("Invalid class deserialized " + obj.getClass().getName() + " is not " + expectedClass.getName());
+            }
+        }
+        return list;
     }
 
     @SuppressWarnings("unchecked")
-    public <X extends Serializable> List<X> readObjectList(Class<X> expectedClass, ClassMapper classMapper) throws IOException, InvalidSerializedDataException {
-        return new ArrayList<X>((SerializableList) readObject(classMapper, SerializableList.class));
+    public List<Serializable> readObjectList() throws IOException, InvalidSerializedDataException {
+        return readObjectList(Serializable.class);
     }
 
-    @SuppressWarnings("unchecked")
-    public List<Serializable> readObjectList(ClassMapper classMapper) throws IOException, InvalidSerializedDataException {
-        return new ArrayList<Serializable>((SerializableList) readObject(classMapper, SerializableList.class));
-    }
-
-    Serializable readObject(ClassMapper classMapper, Class<? extends Serializable> overrideClass) throws IOException, InvalidSerializedDataException {
-        SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, classMapper, overrideClass);
+    public <X extends Serializable> X readSpecificObject(Class<X> specificClass) throws IOException, InvalidSerializedDataException {
+        SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, serializer.getClassMapper(), specificClass);
         try {
-            Serializable object = serializationMetadata.getClassType().newInstance();
-            deserialize(object, serializationMetadata, this);
-            return object;
+            Serializable serializable = serializationMetadata.getClassType().newInstance();
+            try {
+                X object = specificClass.cast(serializable);
+                deserialize(object, serializationMetadata, this);
+                return object;
+            } catch (ClassCastException e) {
+                throw new IllegalArgumentException("Invalid class deserialized " + readObject().getClass().getName() + " is not " + specificClass.getName());
+            }
         } catch (InstantiationException e) {
             throw new IllegalArgumentException("Cannot instantiate class type " + serializationMetadata.getClassType().getName());
         } catch (IllegalAccessException e) {

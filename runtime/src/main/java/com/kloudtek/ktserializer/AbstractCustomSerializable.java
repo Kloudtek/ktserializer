@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -16,7 +16,7 @@ public abstract class AbstractCustomSerializable implements CustomSerializable {
     protected AbstractCustomSerializable() {
     }
 
-    public void deserialize(@NotNull byte[] serialized, @NotNull Serializer serializer, @NotNull SerializedDataHeader objectMetadata) throws InvalidSerializedDataException {
+    public void deserialize(@NotNull byte[] serialized, @NotNull SerializationEngine serializer, @NotNull SerializedDataHeader objectMetadata) throws InvalidSerializedDataException {
         try {
             deserialize(new DeserializationStream(serialized, serializer), objectMetadata.getVersion());
         } catch (IOException e) {

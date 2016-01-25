@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
@@ -19,18 +20,17 @@ public class ClassMapper {
     private final ArrayList<ArrayList<String>> libraryClasses = new ArrayList<ArrayList<String>>();
     private final HashMap<ClassId, String> classIdToName = new HashMap<ClassId, String>();
     private final HashMap<String, ClassId> nameToClassId = new HashMap<String, ClassId>();
-    private HashSet<Integer> libNb = new HashSet<Integer>();
 
     public ClassMapper() {
-        registerLibrary(0, defaultClasses);
+        registerLibraryInternal(new ShortLibraryId((short) 0), toStrings(defaultClasses));
     }
 
     public ClassMapper(Class<?>... classes) {
         this();
-        registerLibrary(1, classes);
+        registerLibrary(new ShortLibraryId((short) 1), toStrings(classes));
     }
 
-    public String get(int libraryId, int classId) {
+    public String get(LibraryId libraryId, int classId) {
         return classIdToName.get(new ClassId(libraryId, classId));
     }
 
@@ -38,40 +38,89 @@ public class ClassMapper {
         return nameToClassId.get(classType);
     }
 
-    /**
-     * Register class library.
-     *
-     * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
-     * @param classes Classes for that library
-     */
-    public synchronized void registerLibrary(int number, List<String> classes) {
-        if (libNb.contains(number)) {
-            throw new IllegalArgumentException("Serialization library registration number " + number
-                    + " does not match " + libraryClasses.size() + 1);
-        }
-        ArrayList<String> list = new ArrayList<String>(classes.size());
-        for (int i = 0; i < classes.size(); i++) {
-            String className = classes.get(i);
-            list.add(className);
-            ClassId classId = new ClassId(number, i);
-            classIdToName.put(classId, className);
-            nameToClassId.put(className, classId);
-        }
-        libraryClasses.add(list);
-        libNb.add(number);
+    public void registerLibrary(LibraryId libraryId, Class<?>... classes) {
+        registerLibraryInternal(libraryId, toStrings(Arrays.asList(classes)));
+    }
+
+    public void registerLibrary(LibraryId libraryId, String... classes) {
+        registerLibraryInternal(libraryId, Arrays.asList(classes));
     }
 
     /**
      * Register class library.
      *
-     * @param number  Library number starting at one. This is used to validate registration isn't done in wrong order.
+     * @param libraryId Library id
      * @param classes Classes for that library
      */
-    public void registerLibrary(int number, Class<?>... classes) {
-        ArrayList<String> classNames = new ArrayList<String>();
-        for (Class<?> cl : classes) {
-            classNames.add(cl.getName());
+    public void registerLibrary(LibraryId libraryId, List<String> classes) {
+        if (libraryId instanceof ShortLibraryId && ((ShortLibraryId) libraryId).getId() == 0) {
+            throw new IllegalArgumentException("Short library id cannot be zero");
         }
-        registerLibrary(number, classNames);
+        registerLibraryInternal(libraryId, classes);
+    }
+
+    private synchronized void registerLibraryInternal(LibraryId libraryId, List<String> classes) {
+        ArrayList<String> list = new ArrayList<String>(classes.size());
+        for (int i = 0; i < classes.size(); i++) {
+            String className = classes.get(i);
+            ClassId classId = new ClassId(libraryId, i);
+            ClassId existing = nameToClassId.get(className);
+            if (existing != null && !existing.equals(classId)) {
+                throw new InvalidConfigException("Duplicate class registration: class name=" + className + " : new class id " + classId + " : existing class id " + existing);
+            }
+            list.add(className);
+            classIdToName.put(classId, className);
+            nameToClassId.put(className, classId);
+        }
+        libraryClasses.add(list);
+    }
+
+    @NotNull
+    private ArrayList<String> toStrings(@NotNull Class<?>[] classes) {
+        return toStrings(Arrays.asList(classes));
+    }
+
+    @NotNull
+    private ArrayList<String> toStrings(@NotNull List<Class<?>> classes) {
+        ArrayList<String> list = new ArrayList<String>();
+        for (Class cl : classes) {
+            list.add(cl.getName());
+        }
+        return list;
+    }
+
+    public void readLibraryConfig(String classpathResourcePath) throws IOException {
+        InputStream is = ClassMapper.class.getResourceAsStream(classpathResourcePath);
+        if (is != null) {
+            Properties p = new Properties();
+            p.load(is);
+            for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                String libraryIdStr = entry.getKey().toString();
+                LibraryId libraryId;
+                try {
+                    libraryId = new ShortLibraryId(Short.parseShort(libraryIdStr));
+                } catch (NumberFormatException e) {
+                    libraryId = new LongLibraryId(libraryIdStr);
+                }
+                String className = entry.getValue().toString();
+                try {
+                    Class<?> clazz = Class.forName(className);
+                    if (Library.class.isAssignableFrom(clazz)) {
+                        Library library = clazz.asSubclass(Library.class).newInstance();
+                        registerLibrary(libraryId, library.getClasses());
+                    } else {
+                        throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
+                    }
+                } catch (ClassNotFoundException e) {
+                    throw new InvalidConfigException("Unable to find class: " + className + ": " + e.getMessage(), e);
+                } catch (InstantiationException e) {
+                    throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
+                } catch (IllegalAccessException e) {
+                    throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
+                }
+            }
+        } else {
+            throw new IOException("library config not found: " + classpathResourcePath);
+        }
     }
 }

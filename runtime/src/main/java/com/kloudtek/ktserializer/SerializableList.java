@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -13,7 +13,7 @@ import java.util.Collection;
 /**
  * Created by yannick on 17/01/2015.
  */
-public class SerializableList<X extends Serializable> extends ArrayList<X> implements CustomSerializable {
+public class SerializableList extends ArrayList<Serializable> implements CustomSerializable {
     public SerializableList(int capacity) {
         super(capacity);
     }
@@ -21,7 +21,7 @@ public class SerializableList<X extends Serializable> extends ArrayList<X> imple
     public SerializableList() {
     }
 
-    public SerializableList(Collection<? extends X> collection) {
+    public SerializableList(Collection<? extends Serializable> collection) {
         super(collection);
     }
 
@@ -33,7 +33,7 @@ public class SerializableList<X extends Serializable> extends ArrayList<X> imple
     @Override
     public void serialize(@NotNull SerializationStream os) throws IOException {
         os.writeUnsignedNumber(size());
-        for (X x : this) {
+        for (Serializable x : this) {
             os.writeObject(x);
         }
     }
@@ -43,7 +43,7 @@ public class SerializableList<X extends Serializable> extends ArrayList<X> imple
     public void deserialize(@NotNull DeserializationStream is, int version) throws IOException, InvalidSerializedDataException {
         long total = is.readUnsignedNumber();
         for (int i = 0; i < total; i++) {
-            add((X) is.readObject());
+            add(is.readObject());
         }
     }
 }

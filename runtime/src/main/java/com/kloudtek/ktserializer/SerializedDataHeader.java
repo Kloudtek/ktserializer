@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -7,15 +7,17 @@ package com.kloudtek.ktserializer;
 import com.kloudtek.util.io.DataOutputStream;
 
 import java.io.IOException;
+import java.util.BitSet;
 
 /**
  * Created by yannick on 03/01/2015.
  */
 public class SerializedDataHeader {
+    public static final long[] EMPTYFLAGS = new long[]{0L};
     private int version;
     private ClassId classId;
     private Class<? extends Serializable> classType;
-    private boolean forcedClassId;
+    private boolean specificClass;
 
     @SuppressWarnings({"ConstantConditions", "unchecked"})
     public SerializedDataHeader(DeserializationStream ds, ClassMapper classMapper) throws IOException, InvalidSerializedDataException {
@@ -23,13 +25,22 @@ public class SerializedDataHeader {
     }
 
     @SuppressWarnings({"ConstantConditions", "unchecked"})
-    public SerializedDataHeader(DeserializationStream ds, ClassMapper classMapper, Class<? extends Serializable> forcedClass) throws IOException, InvalidSerializedDataException {
+    public SerializedDataHeader(DeserializationStream ds, ClassMapper classMapper, Class<? extends Serializable> specificClass) throws IOException, InvalidSerializedDataException {
         if (classMapper == null) {
             classMapper = ds.getSerializer().getClassMapper();
         }
         String className;
+        int flagsBytes = ds.readUnsignedByte();
+        BitSet flags = BitSet.valueOf(new long[]{(long) flagsBytes});
+        boolean specific = checkFlag(flags, Flags.SPECIFIC);
+        boolean longLibId = checkFlag(flags, Flags.LONGLIBID);
         version = (int) ds.readUnsignedNumber();
-        if (forcedClass == null) {
+        if (specific && specificClass == null) {
+            throw new InvalidSerializedDataException("Class was serialized as specific but no specific class was provided: " + specificClass);
+        } else if (!specific && specificClass != null) {
+            throw new InvalidSerializedDataException("Class was not serialized as specific but a specific class was provided: " + specificClass);
+        }
+        if (!specific) {
             int classId = (int) ds.readUnsignedNumber();
             if (classId == 0) {
                 className = ds.readUTF();
@@ -37,10 +48,15 @@ public class SerializedDataHeader {
                     throw new InvalidSerializedDataException("Dynamic classes are not allowed: " + className);
                 }
             } else {
-                int libId = (int) ds.readUnsignedNumber();
-                className = classMapper.get(libId, classId - 1);
+                LibraryId libraryId;
+                if (longLibId) {
+                    libraryId = new LongLibraryId(ds.readUTF());
+                } else {
+                    libraryId = new ShortLibraryId((short) ds.readUnsignedByte());
+                }
+                className = classMapper.get(libraryId, classId - 1);
                 if (className == null) {
-                    throw new InvalidSerializedDataException("Invalid class id: " + new ClassId(libId, classId));
+                    throw new InvalidSerializedDataException("Invalid class id: " + new ClassId(libraryId, classId));
                 }
             }
             try {
@@ -51,12 +67,12 @@ public class SerializedDataHeader {
                 throw new InvalidSerializedDataException(e);
             }
         } else {
-            this.classType = forcedClass;
+            this.classType = specificClass;
         }
     }
 
-    public SerializedDataHeader(SerializationStream serializationStream, Integer version, Class<? extends Serializable> classType, ClassMapper classMapper, boolean forcedClassId) {
-        this.forcedClassId = forcedClassId;
+    public SerializedDataHeader(SerializationStream serializationStream, Integer version, Class<? extends Serializable> classType, ClassMapper classMapper, boolean specificClass) {
+        this.specificClass = specificClass;
         if (version != null) {
             long v = version;
             if (v < 0) {
@@ -73,22 +89,47 @@ public class SerializedDataHeader {
         if (classMapper != null) {
             classId = classMapper.get(classType.getName());
         }
-        if (serializationStream.getSerializer().isDisallowUnmappedClasses() && classId == null) {
+        if (!specificClass && serializationStream.getSerializer().isDisallowUnmappedClasses() && classId == null) {
             throw new IllegalArgumentException("Serialization of un-mapped classes is disallowed: " + classType.getName());
         }
     }
 
     public void write(DataOutputStream ss) throws IOException {
+        BitSet flags = new BitSet();
+        if (specificClass) {
+            setFlag(flags, Flags.SPECIFIC);
+        }
+        boolean longId = classId != null && classId.getLibraryId() instanceof LongLibraryId;
+        if (longId) {
+            setFlag(flags, Flags.LONGLIBID);
+        }
+        long[] flagsBytes = flags.toLongArray();
+        if (flagsBytes.length == 0) {
+            flagsBytes = EMPTYFLAGS;
+        }
+        ss.writeUnsignedNumber(flagsBytes[0]);
         ss.writeUnsignedNumber(version);
-        if (!forcedClassId) {
+        if (!specificClass) {
             if (classId != null) {
                 ss.writeUnsignedNumber(classId.getClassId() + 1);
-                ss.writeUnsignedNumber(classId.getLibraryId());
+                if (longId) {
+                    ss.writeUTF(classId.getLibraryId().toString());
+                } else {
+                    ss.writeByte(((ShortLibraryId) classId.getLibraryId()).getId());
+                }
             } else {
                 ss.writeUnsignedNumber(0);
                 ss.writeUTF(classType.getName());
             }
         }
+    }
+
+    private void setFlag(BitSet flags, Flags flag) {
+        flags.set(flag.ordinal());
+    }
+
+    private boolean checkFlag(BitSet flags, Flags flag) {
+        return flags.get(flag.ordinal());
     }
 
     public Integer getVersion() {
@@ -97,5 +138,10 @@ public class SerializedDataHeader {
 
     public Class<? extends Serializable> getClassType() {
         return classType;
+    }
+
+    public enum Flags {
+        // new flags must always be added at the end of this list, change to the order will break all serialized data !!!!
+        SPECIFIC, LONGLIBID
     }
 }

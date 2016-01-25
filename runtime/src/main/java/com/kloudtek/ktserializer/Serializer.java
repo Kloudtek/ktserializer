@@ -1,187 +1,179 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
 
+import com.kloudtek.util.SystemUtils;
 import com.kloudtek.util.UnexpectedException;
+import com.kloudtek.util.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * Created by yannick on 12/09/2014.
+ * Created by yannick on 1/25/16.
  */
 public class Serializer {
-    private static ClassMapper globalClassMapper = new ClassMapper();
-    private static final Serializer globalInstance = new Serializer(globalClassMapper);
-    protected final HashMap<String, Object> map = new HashMap<String, Object>();
-    protected ClassMapper classMapper;
-    protected boolean disallowUnmappedClasses = false;
-    protected int maxReadSize;
+    private static ClassMapper systemClassMapper = new ClassMapper();
+    private static final SerializationEngine globalInstance = new SerializationEngine(systemClassMapper);
 
-    public Serializer() {
-        this(globalClassMapper);
-    }
-
-    public Serializer(ClassMapper classMapper) {
-        this.classMapper = classMapper;
-    }
-
-    public <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
-        try {
-            DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObject(serializableObj);
-        } catch (IOException e) {
-            throw new InvalidSerializedDataException(e);
+    static {
+        if (SystemUtils.isAndroid()) {
+            // Let's be friendly to android strict mode
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            try {
+                executor.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadConfig();
+                    }
+                }).get();
+            } catch (Exception e) {
+                throw new UnexpectedException(e);
+            } finally {
+                executor.shutdown();
+            }
+        } else {
+            loadConfig();
         }
     }
 
-    public <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
-        return deserialize(classType, serializedData, null);
-    }
-
-    public <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
+    private static void loadConfig() {
         try {
-            DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObject(classType, classMapper != null ? classMapper : this.classMapper);
+            InputStream dirStream = ClassMapper.class.getClassLoader().getResourceAsStream("META-INF/ktserializer");
+            if (dirStream != null) {
+                String filesStr = IOUtils.toString(dirStream);
+                String[] files = filesStr.split("\n");
+                for (String file : files) {
+                    loadConfig(file);
+                }
+            }
         } catch (IOException e) {
-            throw new InvalidSerializedDataException(e);
+            throw new InvalidConfigException(e);
+        } catch (NumberFormatException e) {
+            throw new InvalidConfigException(e);
+        } catch (ClassNotFoundException e) {
+            throw new InvalidConfigException(e);
+        } catch (ClassCastException e) {
+            throw new InvalidConfigException(e);
+        } catch (InstantiationException e) {
+            throw new InvalidConfigException(e);
+        } catch (IllegalAccessException e) {
+            throw new InvalidConfigException(e);
         }
     }
 
-    public Serializable deserialize(@NotNull byte[] serializedData) throws InvalidSerializedDataException {
-        return deserialize(serializedData, null);
+    private static void loadConfig(String path) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+        globalInstance.classMapper.readLibraryConfig("/META-INF/ktserializer/" + path);
     }
 
-    public Serializable deserialize(@NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
-        try {
-            DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObject(classMapper != null ? classMapper : this.classMapper, null);
-        } catch (IOException e) {
-            throw new InvalidSerializedDataException(e);
-        }
+    public static <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserialize(serializableObj, serializedData);
     }
 
-    public List<Serializable> deserializeList(@NotNull byte[] serializedData) throws InvalidSerializedDataException {
-        return deserializeList(serializedData, null);
+    public static <S extends Serializable> List<S> deserializeList(@NotNull Class<S> classType, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserializeList(classType, serializedData);
     }
 
-    public List<Serializable> deserializeList(@NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
-        try {
-            DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObjectList(classMapper != null ? classMapper : this.classMapper);
-        } catch (IOException e) {
-            throw new InvalidSerializedDataException(e);
-        }
+    public static SerializationEngine setInject(Object value) {
+        return globalInstance.setInject(value);
     }
 
-    public <S extends Serializable> List<S> deserializeList(@NotNull Class<S> classType, @NotNull byte[] serializedData, @Nullable ClassMapper classMapper) throws InvalidSerializedDataException {
-        try {
-            DeserializationStream ds = new DeserializationStream(serializedData, this);
-            return ds.readObjectList(classType, classMapper != null ? classMapper : this.classMapper);
-        } catch (IOException e) {
-            throw new InvalidSerializedDataException(e);
-        }
+    public static Object getInject(String key) {
+        return globalInstance.getInject(key);
     }
 
-    public byte[] serialize(@NotNull Serializable object) {
-        return serialize(object, null);
+    public static ClassMapper getClassMapper() {
+        return globalInstance.getClassMapper();
     }
 
-    public byte[] serialize(@NotNull List<? extends Serializable> list) {
-        return serializeList(list, null);
+    public static byte[] serializeSpecific(@NotNull Serializable object) {
+        return globalInstance.serializeSpecific(object);
     }
 
-    public byte[] serialize(@NotNull List<? extends Serializable> list, @Nullable ClassMapper classMapper) {
-        return serializeList(list, classMapper);
+    public static int getMaxReadSize() {
+        return globalInstance.getMaxReadSize();
     }
 
-    public byte[] serialize(@NotNull Serializable object, @Nullable ClassMapper classMapper) {
-        try {
-            SerializationStream os = new SerializationStream(this);
-            os.writeObject(object, classMapper != null ? classMapper : this.classMapper);
-            return os.closeAndReturnData();
-        } catch (IOException e) {
-            throw new UnexpectedException(e);
-        }
+    public static void setMaxReadSize(int maxReadSize) {
+        globalInstance.setMaxReadSize(maxReadSize);
     }
 
-    public byte[] serializeList(@NotNull Collection<? extends Serializable> collection, @Nullable ClassMapper classMapper) {
-        try {
-            SerializationStream os = new SerializationStream(this);
-            os.writeObjectList(collection, classMapper != null ? classMapper : this.classMapper);
-            return os.closeAndReturnData();
-        } catch (IOException e) {
-            throw new UnexpectedException(e);
-        }
+    public static byte[] serializeList(@NotNull Collection<? extends Serializable> collection) {
+        return globalInstance.serializeList(collection);
     }
 
-    public Serializer setInject(String key, Object value) {
-        map.put(key, value);
-        return this;
+    public static SerializationEngine setInject(String key, Object value) {
+        return globalInstance.setInject(key, value);
     }
 
-    public Object getInject(String key) {
-        return getImpl(key);
+    public static <X extends Serializable> X deserialize(@NotNull Class<X> classType, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserialize(classType, serializedData);
     }
 
-    public Serializer setInject(Object value) {
-        return setInject(value.getClass().getName(), value);
+    public static SerializationEngine setInject(Class<?> classType, Object value) {
+        return globalInstance.setInject(classType, value);
     }
 
-    public Serializer setInject(Class<?> classType, Object value) {
-        map.put(classType.getName(), value);
-        return this;
+    public static <X> X getInject(Class<X> classType) {
+        return globalInstance.getInject(classType);
     }
 
-    public <X> X getInject(Class<X> classType) {
-        return classType.cast(getImpl(classType.getName()));
+    public static <S extends Serializable> S deserializeSpecific(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserializeSpecific(serializableObj, serializedData);
     }
 
-    private Object getImpl(String key) {
-        return map.get(key);
+    public static <X extends Serializable> X deserializeSpecific(@NotNull Class<X> classType, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserializeSpecific(classType, serializedData);
     }
 
-    public ClassMapper getClassMapper() {
-        return classMapper;
+    public static List<Serializable> deserializeList(@NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserializeList(serializedData);
     }
 
-    public boolean isDisallowUnmappedClasses() {
-        return disallowUnmappedClasses;
+    public static void setDisallowUnmappedClasses(boolean disallowUnmappedClasses) {
+        globalInstance.setDisallowUnmappedClasses(disallowUnmappedClasses);
     }
 
-    public void setDisallowUnmappedClasses(boolean disallowUnmappedClasses) {
-        this.disallowUnmappedClasses = disallowUnmappedClasses;
+    public static boolean isDisallowUnmappedClasses() {
+        return globalInstance.isDisallowUnmappedClasses();
     }
 
-    /**
-     * Set the size limit on serialized payloads to read (defaults to 10K/10240 bytes)
-     *
-     * @return size limit
-     */
-    public int getMaxReadSize() {
-        return maxReadSize;
+    public static Serializable deserialize(@NotNull byte[] serializedData) throws InvalidSerializedDataException {
+        return globalInstance.deserialize(serializedData);
     }
 
-    public void setMaxReadSize(int maxReadSize) {
-        this.maxReadSize = maxReadSize;
+    public static byte[] serialize(@NotNull Serializable object) {
+        return globalInstance.serialize(object);
     }
 
+    public static void registerLibrary(LibraryId libraryId, Class<?>... classes) {
+        globalInstance.classMapper.registerLibrary(libraryId, classes);
+    }
 
-    public static Serializer global() {
+    public static void registerLibrary(LibraryId libraryId, String... classes) {
+        globalInstance.classMapper.registerLibrary(libraryId, classes);
+    }
+
+    public static void registerLibrary(LibraryId libraryId, List<String> classes) {
+        globalInstance.classMapper.registerLibrary(libraryId, classes);
+    }
+
+    public static void readLibraryConfig(String classpathResourcePath) throws IOException {
+        globalInstance.classMapper.readLibraryConfig(classpathResourcePath);
+    }
+
+    public static SerializationEngine engine() {
         return globalInstance;
     }
 
-    public static void registerLibrary(int number, List<String> classes) {
-        globalClassMapper.registerLibrary(number, classes);
-    }
-
-    public static void registerLibrary(int number, Class<?>... classes) {
-        globalClassMapper.registerLibrary(number, classes);
+    public static ClassMapper systemClassMapper() {
+        return systemClassMapper;
     }
 }

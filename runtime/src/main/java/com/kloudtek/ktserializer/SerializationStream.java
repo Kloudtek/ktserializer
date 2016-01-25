@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Kloudtek Ltd
+ * Copyright (c) 2016 Kloudtek Ltd
  */
 
 package com.kloudtek.ktserializer;
@@ -17,17 +17,17 @@ import java.util.Collection;
  */
 public class SerializationStream extends DataOutputStream {
     @NotNull
-    private Serializer serializer;
+    private SerializationEngine serializer;
 
-    public SerializationStream(@NotNull Serializer serializer) throws IOException {
+    public SerializationStream(@NotNull SerializationEngine serializer) throws IOException {
         super(new ByteArrayDataOutputStream());
         this.serializer = serializer;
         // payload flags (nothing at the moment)
-        write(0);
+        writeUnsignedNumber(0L);
     }
 
     @NotNull
-    public Serializer getSerializer() {
+    public SerializationEngine getSerializer() {
         return serializer;
     }
 
@@ -48,12 +48,12 @@ public class SerializationStream extends DataOutputStream {
     }
 
     public void writeObjectList(Collection<? extends Serializable> collection, ClassMapper classMapper) throws IOException {
-        writeObject(new SerializableList<Serializable>(collection), classMapper, true);
+        writeObject(new SerializableList(collection), classMapper, true);
     }
 
-    void writeObject(Serializable serializable, ClassMapper classMapper, boolean forceClassType) throws IOException {
+    public void writeObject(Serializable serializable, ClassMapper classMapper, boolean specificClass) throws IOException {
         final SerializedDataHeader metadata = new SerializedDataHeader(this,
-                ((CustomSerializable) serializable).getVersion(), serializable.getClass(), classMapper, forceClassType);
+                ((CustomSerializable) serializable).getVersion(), serializable.getClass(), classMapper, specificClass);
         metadata.write(this);
         ((CustomSerializable) serializable).serialize(this);
     }
