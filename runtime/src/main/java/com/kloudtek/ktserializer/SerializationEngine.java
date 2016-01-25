@@ -18,7 +18,7 @@ import java.util.List;
 public class SerializationEngine {
     protected final HashMap<String, Object> map = new HashMap<String, Object>();
     protected ClassMapper classMapper;
-    protected boolean disallowUnmappedClasses = false;
+    protected boolean disallowUnmappedClasses = true;
     protected int maxReadSize;
 
     public SerializationEngine() {
