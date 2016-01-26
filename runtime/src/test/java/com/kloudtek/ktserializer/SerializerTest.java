@@ -46,13 +46,13 @@ public class SerializerTest {
 
     @Test
     public void testShortIdLib() throws Exception {
-        serializer.getClassMapper().readLibraryConfig("/shortidlib.properties");
+        serializer.getClassMapper().readLibraryConfig("shortidlib.properties");
         simpleLibTest(new TestLibraryShortIdObj());
     }
 
     @Test
     public void testLongIdLib() throws Exception {
-        serializer.getClassMapper().readLibraryConfig("/longidlib.properties");
+        serializer.getClassMapper().readLibraryConfig("longidlib.properties");
         simpleLibTest(new TestLibraryLongIdObj());
     }
 
@@ -64,8 +64,8 @@ public class SerializerTest {
 
     @Test(expectedExceptions = InvalidConfigException.class, expectedExceptionsMessageRegExp = "Duplicate class registration.*")
     public void conflictingLibraryConfigs() throws Exception {
-        Serializer.readLibraryConfig("/shortidlib.properties");
-        Serializer.readLibraryConfig("/shortidconflict.properties");
+        Serializer.readLibraryConfig("shortidlib.properties");
+        Serializer.readLibraryConfig("shortidconflict.properties");
     }
 
     @Test
