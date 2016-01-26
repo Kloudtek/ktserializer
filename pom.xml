@@ -19,6 +19,7 @@
     </organization>
     <modules>
         <module>runtime</module>
+        <module>test-resources</module>
     </modules>
     <scm>
         <url>scm:git:git@github.com:Kloudtek/ktserializer.git</url>
