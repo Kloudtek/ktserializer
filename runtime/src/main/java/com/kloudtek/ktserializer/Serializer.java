@@ -83,10 +83,10 @@ public class Serializer {
             throw new InvalidConfigException(e);
         } catch (ClassCastException e) {
             throw new InvalidConfigException(e);
-        } catch (InstantiationException e) {
-            throw new InvalidConfigException(e);
-        } catch (IllegalAccessException e) {
-            throw new InvalidConfigException(e);
+//        } catch (InstantiationException e) {
+//            throw new InvalidConfigException(e);
+//        } catch (IllegalAccessException e) {
+//            throw new InvalidConfigException(e);
         }
     }
 
