@@ -79,8 +79,8 @@ public class Serializer {
             throw new InvalidConfigException(e);
         } catch (NumberFormatException e) {
             throw new InvalidConfigException(e);
-        } catch (ClassNotFoundException e) {
-            throw new InvalidConfigException(e);
+//        } catch (ClassNotFoundException e) {
+//            throw new InvalidConfigException(e);
         } catch (ClassCastException e) {
             throw new InvalidConfigException(e);
 //        } catch (InstantiationException e) {
