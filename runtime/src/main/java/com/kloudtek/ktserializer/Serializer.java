@@ -93,13 +93,9 @@ public class Serializer {
             Set<String> result = new HashSet<String>();
             while (entries.hasMoreElements()) {
                 String name = entries.nextElement().getName();
-                if (name.startsWith(META_INF_KTSERIALIZER)) {
-                    String entry = name.substring(META_INF_KTSERIALIZER.length());
-                    int checkSubdir = entry.indexOf("/");
-                    if (checkSubdir >= 0) {
-                        entry = entry.substring(0, checkSubdir);
-                    }
-                    if (!entry.trim().isEmpty()) {
+                if (name.startsWith(META_INF_KTSERIALIZER + "/")) {
+                    String entry = name.substring(META_INF_KTSERIALIZER.length() + 1);
+                    if (!entry.isEmpty() && !entry.contains("/")) {
                         result.add(entry);
                     }
                 }
