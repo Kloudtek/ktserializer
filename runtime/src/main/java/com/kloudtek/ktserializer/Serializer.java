@@ -17,11 +17,13 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 /**
  * Created by yannick on 1/25/16.
  */
 public class Serializer {
+    private static final Logger logger = Logger.getLogger(Serializer.class.getName());
     private static ClassMapper systemClassMapper = new ClassMapper();
     private static final SerializationEngine globalInstance = new SerializationEngine(systemClassMapper);
 
@@ -50,12 +52,14 @@ public class Serializer {
         try {
             Enumeration<URL> resources = ClassMapper.class.getClassLoader().getResources("META-INF/ktserializer");
             while (resources.hasMoreElements()) {
-                InputStream is = resources.nextElement().openStream();
+                URL url = resources.nextElement();
+                logger.info("Loading config file: " + url);
+                InputStream is = url.openStream();
                 try {
-                    String filesStr = IOUtils.toString(is);
+                    String filesStr = IOUtils.toString(is).trim();
                     String[] files = filesStr.split("\n");
                     for (String file : files) {
-                        loadConfig(file);
+                        loadConfig(file.trim());
                     }
                 } finally {
                     IOUtils.close(is);
