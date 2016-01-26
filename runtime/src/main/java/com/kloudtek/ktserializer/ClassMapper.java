@@ -95,7 +95,7 @@ public class ClassMapper {
 
     public void readLibraryConfig(String classpathResourcePath) throws IOException {
         URL url = ClassMapper.class.getClassLoader().getResource(classpathResourcePath);
-        logger.info("LOADING " + url.toURI());
+        logger.info("LOADING " + url);
         InputStream is = url.openStream();
         if (is == null) {
             throw new IOException("library config not found: " + classpathResourcePath);
