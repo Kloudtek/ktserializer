@@ -32,7 +32,7 @@ public class DeserializationStream extends DataInputStream {
     }
 
     @NotNull
-    private <X extends Serializable> X readObject(X object, boolean specific) throws IOException, InvalidSerializedDataException {
+    public <X extends Serializable> X readObject(X object, boolean specific) throws IOException, InvalidSerializedDataException {
         Class<? extends Serializable> expectedClass = object.getClass();
         SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, serializer.getClassMapper(), specific ? object.getClass() : null);
         if (!serializationMetadata.getClassType().equals(expectedClass)) {
@@ -43,7 +43,7 @@ public class DeserializationStream extends DataInputStream {
     }
 
     @NotNull
-    Serializable readObject() throws IOException, InvalidSerializedDataException {
+    public Serializable readObject() throws IOException, InvalidSerializedDataException {
         SerializedDataHeader serializationMetadata = new SerializedDataHeader(this, serializer.getClassMapper(), null);
         try {
             Serializable object = serializationMetadata.getClassType().newInstance();
