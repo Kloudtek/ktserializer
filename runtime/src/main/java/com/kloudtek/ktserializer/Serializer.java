@@ -99,7 +99,9 @@ public class Serializer {
                     if (checkSubdir >= 0) {
                         entry = entry.substring(0, checkSubdir);
                     }
-                    result.add(entry);
+                    if (!entry.trim().isEmpty()) {
+                        result.add(entry);
+                    }
                 }
             }
             System.out.println("it's a jar: found " + result);
