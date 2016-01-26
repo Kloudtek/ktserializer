@@ -11,7 +11,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,12 +48,17 @@ public class Serializer {
 
     private static void loadConfig() {
         try {
-            InputStream dirStream = ClassMapper.class.getClassLoader().getResourceAsStream("META-INF/ktserializer");
-            if (dirStream != null) {
-                String filesStr = IOUtils.toString(dirStream);
-                String[] files = filesStr.split("\n");
-                for (String file : files) {
-                    loadConfig(file);
+            Enumeration<URL> resources = ClassMapper.class.getClassLoader().getResources("META-INF/ktserializer");
+            while (resources.hasMoreElements()) {
+                InputStream is = resources.nextElement().openStream();
+                try {
+                    String filesStr = IOUtils.toString(is);
+                    String[] files = filesStr.split("\n");
+                    for (String file : files) {
+                        loadConfig(file);
+                    }
+                } finally {
+                    IOUtils.close(is);
                 }
             }
         } catch (IOException e) {
@@ -70,7 +77,7 @@ public class Serializer {
     }
 
     private static void loadConfig(String path) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-        globalInstance.classMapper.readLibraryConfig("/META-INF/ktserializer/" + path);
+        globalInstance.classMapper.readLibraryConfig("META-INF/ktserializer/" + path);
     }
 
     public static <S extends Serializable> S deserialize(@NotNull S serializableObj, @NotNull byte[] serializedData) throws InvalidSerializedDataException {
