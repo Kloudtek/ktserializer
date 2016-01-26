@@ -55,14 +55,18 @@ public class Serializer {
                 URL url = resources.nextElement();
                 logger.info("Loading config file: " + url);
                 InputStream is = url.openStream();
-                try {
-                    String filesStr = IOUtils.toString(is).trim();
-                    String[] files = filesStr.split("\n");
-                    for (String file : files) {
-                        loadConfig(file.trim());
+                if (is != null) {
+                    try {
+                        String filesStr = IOUtils.toString(is).trim();
+                        String[] files = filesStr.split("\n");
+                        for (String file : files) {
+                            loadConfig(file.trim());
+                        }
+                    } finally {
+                        IOUtils.close(is);
                     }
-                } finally {
-                    IOUtils.close(is);
+                } else {
+                    logger.info("Unable to load " + url + " stream is null");
                 }
             }
         } catch (IOException e) {
