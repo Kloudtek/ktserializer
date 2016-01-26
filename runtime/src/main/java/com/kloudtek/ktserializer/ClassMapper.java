@@ -97,7 +97,8 @@ public class ClassMapper {
             throw new IOException("library config not found: " + classpathResourcePath);
         }
         while (resources.hasMoreElements()) {
-            InputStream is = resources.nextElement().openStream();
+            URL url = resources.nextElement();
+            InputStream is = url.openStream();
             try {
                 Properties p = new Properties();
                 p.load(is);
@@ -126,6 +127,9 @@ public class ClassMapper {
                         throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
                     }
                 }
+            } catch (ExceptionInInitializerError e) {
+                // WTF @#$@(&U)#$*^&#@O$&*@#(&$(#@&$(*@#$(@#&$*(&@#(@*#$&@(#&$@*(#^%$@*(#^%(@^%(*@^&%(*@^%$(*^@!%#W
+                throw new RuntimeException("WTF CAN'T LOAD " + url, e);
             } finally {
                 IOUtils.close(is);
             }
