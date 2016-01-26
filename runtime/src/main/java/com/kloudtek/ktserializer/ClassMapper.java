@@ -9,7 +9,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
@@ -17,6 +19,7 @@ import java.util.*;
  * downside of this approach is it's lack of flexibility and extensibility. Also be careful not to change
  */
 public class ClassMapper {
+    private static final Logger logger = Logger.getLogger(ClassMapper.class.getName());
     static final Class<?>[] defaultClasses = new Class[]{SerializableList.class};
     private final ArrayList<ArrayList<String>> libraryClasses = new ArrayList<ArrayList<String>>();
     private final HashMap<ClassId, String> classIdToName = new HashMap<ClassId, String>();
@@ -91,7 +94,9 @@ public class ClassMapper {
     }
 
     public void readLibraryConfig(String classpathResourcePath) throws IOException {
-        InputStream is = ClassMapper.class.getClassLoader().getResourceAsStream(classpathResourcePath);
+        URL url = ClassMapper.class.getClassLoader().getResource(classpathResourcePath);
+        logger.info("LOADING " + url.toURI());
+        InputStream is = url.openStream();
         if (is == null) {
             throw new IOException("library config not found: " + classpathResourcePath);
         }
