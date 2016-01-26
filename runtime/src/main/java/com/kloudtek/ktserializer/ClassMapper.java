@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.*;
 
 /**
@@ -92,47 +91,40 @@ public class ClassMapper {
     }
 
     public void readLibraryConfig(String classpathResourcePath) throws IOException {
-        Enumeration<URL> resources = ClassMapper.class.getClassLoader().getResources(classpathResourcePath);
-        if (!resources.hasMoreElements()) {
+        InputStream is = ClassMapper.class.getClassLoader().getResourceAsStream(classpathResourcePath);
+        if (is == null) {
             throw new IOException("library config not found: " + classpathResourcePath);
         }
-        while (resources.hasMoreElements()) {
-            URL url = resources.nextElement();
-            InputStream is = url.openStream();
-            try {
-                Properties p = new Properties();
-                p.load(is);
-                for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                    String libraryIdStr = entry.getKey().toString();
-                    LibraryId libraryId;
-                    try {
-                        libraryId = new ShortLibraryId(Short.parseShort(libraryIdStr));
-                    } catch (NumberFormatException e) {
-                        libraryId = new LongLibraryId(libraryIdStr);
-                    }
-                    String className = entry.getValue().toString();
-                    try {
-                        Class<?> clazz = Class.forName(className);
-                        if (Library.class.isAssignableFrom(clazz)) {
-                            Library library = clazz.asSubclass(Library.class).newInstance();
-                            registerLibrary(libraryId, library.getClasses());
-                        } else {
-                            throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
-                        }
-                    } catch (ClassNotFoundException e) {
-                        throw new InvalidConfigException("Unable to find class: " + className + ": " + e.getMessage(), e);
-                    } catch (InstantiationException e) {
-                        throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
-                    } catch (IllegalAccessException e) {
-                        throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
-                    }
+        try {
+            Properties p = new Properties();
+            p.load(is);
+            for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                String libraryIdStr = entry.getKey().toString();
+                LibraryId libraryId;
+                try {
+                    libraryId = new ShortLibraryId(Short.parseShort(libraryIdStr));
+                } catch (NumberFormatException e) {
+                    libraryId = new LongLibraryId(libraryIdStr);
                 }
-            } catch (ExceptionInInitializerError e) {
-                // WTF @#$@(&U)#$*^&#@O$&*@#(&$(#@&$(*@#$(@#&$*(&@#(@*#$&@(#&$@*(#^%$@*(#^%(@^%(*@^&%(*@^%$(*^@!%#W
-                throw new RuntimeException("WTF CAN'T LOAD " + url, e);
-            } finally {
-                IOUtils.close(is);
+                String className = entry.getValue().toString();
+                try {
+                    Class<?> clazz = Class.forName(className);
+                    if (Library.class.isAssignableFrom(clazz)) {
+                        Library library = clazz.asSubclass(Library.class).newInstance();
+                        registerLibrary(libraryId, library.getClasses());
+                    } else {
+                        throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
+                    }
+                } catch (ClassNotFoundException e) {
+                    throw new InvalidConfigException("Unable to find class: " + className + ": " + e.getMessage(), e);
+                } catch (InstantiationException e) {
+                    throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
+                } catch (IllegalAccessException e) {
+                    throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
+                }
             }
+        } finally {
+            IOUtils.close(is);
         }
     }
 }
