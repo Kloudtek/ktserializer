@@ -17,6 +17,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -55,18 +56,23 @@ public class Serializer {
                 URL url = resources.nextElement();
                 logger.info("Loading config file: " + url);
                 InputStream is = url.openStream();
-                if (is != null) {
-                    try {
-                        String filesStr = IOUtils.toString(is).trim();
-                        String[] files = filesStr.split("\n");
-                        for (String file : files) {
-                            loadConfig(file.trim());
+                try {
+                    if (is != null) {
+                        try {
+                            logger.info("IS=" + is);
+                            String filesStr = IOUtils.toString(is).trim();
+                            String[] files = filesStr.split("\n");
+                            for (String file : files) {
+                                loadConfig(file.trim());
+                            }
+                        } finally {
+                            IOUtils.close(is);
                         }
-                    } finally {
-                        IOUtils.close(is);
+                    } else {
+                        logger.info("Unable to load " + url + " stream is null");
                     }
-                } else {
-                    logger.info("Unable to load " + url + " stream is null");
+                } catch (Throwable e) {
+                    logger.log(Level.WARNING, e.getMessage(), e);
                 }
             }
         } catch (IOException e) {
