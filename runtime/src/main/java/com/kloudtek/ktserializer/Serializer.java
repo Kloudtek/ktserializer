@@ -56,7 +56,6 @@ public class Serializer {
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 for (String file : listFiles(url)) {
-                    System.out.println("--- loading " + file);
                     loadConfig(file.trim());
                 }
             }
@@ -76,10 +75,8 @@ public class Serializer {
     }
 
     private static String[] listFiles(@NotNull URL url) throws IOException {
-        System.out.println("listing files in " + url);
         if (url.getProtocol().equals("file")) {
             try {
-                System.out.println("listing files under dir " + new File(url.toURI()));
                 return new File(url.toURI()).list();
             } catch (URISyntaxException e) {
                 throw new UnexpectedException(e);
@@ -100,7 +97,6 @@ public class Serializer {
                     }
                 }
             }
-            System.out.println("it's a jar: found " + result);
             return result.toArray(new String[result.size()]);
         }
 
