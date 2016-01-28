@@ -46,13 +46,15 @@ public class SerializerTest {
 
     @Test
     public void testShortIdLib() throws Exception {
-        serializer.getClassMapper().readLibraryConfig("shortidlib.properties");
+        serializer.loadConfig("shortidlib.properties");
+        serializer.checkConfigLoaded("shortid", false);
         simpleLibTest(new TestLibraryShortIdObj());
     }
 
     @Test
     public void testLongIdLib() throws Exception {
-        serializer.getClassMapper().readLibraryConfig("longidlib.properties");
+        serializer.loadConfig("longidlib.properties");
+        serializer.checkConfigLoaded("longid", false);
         simpleLibTest(new TestLibraryLongIdObj());
     }
 
@@ -60,12 +62,6 @@ public class SerializerTest {
         byte[] serialized = serializer.serialize(obj);
         Serializable dobj = serializer.deserialize(serialized);
         assertEquals(dobj, obj);
-    }
-
-    @Test(expectedExceptions = InvalidConfigException.class, expectedExceptionsMessageRegExp = "Duplicate class registration.*")
-    public void conflictingLibraryConfigs() throws Exception {
-        Serializer.readLibraryConfig("shortidlib.properties");
-        Serializer.readLibraryConfig("shortidconflict.properties");
     }
 
     @Test
@@ -81,7 +77,6 @@ public class SerializerTest {
 
     @Test
     public void simpleCustomCompositeCustomSerialization() throws InvalidSerializedDataException {
-        serializer.setUnmappedClassesAllowed(true);
         CompositeTestObject o1 = new CompositeTestObject();
         byte[] serialized = serializer.serialize(o1);
         Serializable o2 = serializer.deserialize(serialized);
@@ -90,7 +85,6 @@ public class SerializerTest {
 
     @Test
     public void simpleCustomMultiLvlCompositeCustomSerialization() throws InvalidSerializedDataException {
-        serializer.setUnmappedClassesAllowed(true);
         MultiLvlCompositeTestObject o1 = new MultiLvlCompositeTestObject();
         byte[] serialized = serializer.serialize(o1);
         Serializable o2 = serializer.deserialize(serialized);
@@ -99,7 +93,6 @@ public class SerializerTest {
 
     @Test
     public void simpleLargeCustomSerialization() throws InvalidSerializedDataException {
-        serializer.setUnmappedClassesAllowed(true);
         LargeTestObj o1 = new LargeTestObj((byte) 5);
         byte[] serialized = serializer.serialize(o1);
         assertTrue(serialized.length > 5000);
@@ -127,7 +120,6 @@ public class SerializerTest {
 
     @Test
     public void simpleList() throws InvalidSerializedDataException {
-        serializer.setUnmappedClassesAllowed(true);
         ArrayList<SimpleTestObj> l1 = new ArrayList<SimpleTestObj>();
         l1.add(new SimpleTestObj());
         byte[] data = serializer.serializeList(l1);
@@ -137,7 +129,6 @@ public class SerializerTest {
 
     @Test
     public void complexList() throws InvalidSerializedDataException {
-        serializer.setUnmappedClassesAllowed(true);
         ArrayList<Serializable> o1 = new ArrayList<Serializable>();
         o1.add(new SimpleTestObj());
         o1.add(new CompositeTestObject());

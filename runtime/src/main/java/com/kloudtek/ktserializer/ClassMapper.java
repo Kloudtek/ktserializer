@@ -4,13 +4,12 @@
 
 package com.kloudtek.ktserializer;
 
-import com.kloudtek.util.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
@@ -89,44 +88,5 @@ public class ClassMapper {
             list.add(cl.getName());
         }
         return list;
-    }
-
-    public void readLibraryConfig(String classpathResourcePath) throws IOException {
-        URL url = ClassMapper.class.getClassLoader().getResource(classpathResourcePath);
-        InputStream is = url.openStream();
-        if (is == null) {
-            throw new IOException("library config not found: " + classpathResourcePath);
-        }
-        try {
-            Properties p = new Properties();
-            p.load(is);
-            for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                String libraryIdStr = entry.getKey().toString();
-                LibraryId libraryId;
-                try {
-                    libraryId = new ShortLibraryId(Short.parseShort(libraryIdStr));
-                } catch (NumberFormatException e) {
-                    libraryId = new LongLibraryId(libraryIdStr);
-                }
-                String className = entry.getValue().toString();
-                try {
-                    Class<?> clazz = Class.forName(className);
-                    if (Library.class.isAssignableFrom(clazz)) {
-                        Library library = clazz.asSubclass(Library.class).newInstance();
-                        registerLibrary(libraryId, library.getClasses());
-                    } else {
-                        throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
-                    }
-                } catch (ClassNotFoundException e) {
-                    throw new InvalidConfigException("Unable to find class: " + className + ": " + e.getMessage(), e);
-                } catch (InstantiationException e) {
-                    throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
-                } catch (IllegalAccessException e) {
-                    throw new InvalidConfigException("Unable to instantiate class: " + className + ": " + e.getMessage(), e);
-                }
-            }
-        } finally {
-            IOUtils.close(is);
-        }
     }
 }
