@@ -231,10 +231,6 @@ public class SerializationEngine {
         }
     }
 
-    public void checkConfigLoaded() {
-        checkConfigLoaded(null, null);
-    }
-
     public void checkConfigLoaded(@Nullable Boolean dynaClassesAllowed, String... cfgIds) {
         if (cfgIds != null) {
             for (String id : cfgIds) {
