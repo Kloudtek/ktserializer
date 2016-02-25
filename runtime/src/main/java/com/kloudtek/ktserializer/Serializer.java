@@ -29,10 +29,6 @@ public class Serializer {
         }
     }
 
-    public static void checkConfigLoaded() {
-        globalInstance.checkConfigLoaded();
-    }
-
     public static void checkConfigLoaded(@Nullable String cfgId, @Nullable Boolean dynaClassesAllowed) {
         globalInstance.checkConfigLoaded(dynaClassesAllowed, cfgId);
     }
