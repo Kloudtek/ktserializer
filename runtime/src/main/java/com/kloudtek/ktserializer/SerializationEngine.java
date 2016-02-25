@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -176,50 +177,53 @@ public class SerializationEngine {
 
     public synchronized void loadConfig(String classpathLocation) {
         try {
-            InputStream is = ClassMapper.class.getClassLoader().getResourceAsStream(classpathLocation);
-            if (is == null) {
+            Enumeration<URL> resources = ClassMapper.class.getClassLoader().getResources(classpathLocation);
+            if (!resources.hasMoreElements()) {
                 throw new InvalidConfigException("Cannot find config file " + classpathLocation);
             } else {
-                try {
-                    Properties p = new Properties();
-                    p.load(is);
-                    for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                        String key = entry.getKey().toString().toLowerCase();
-                        String value = entry.getValue().toString();
-                        if (key.startsWith("lib.")) {
-                            key = key.substring(4);
-                            LibraryId libraryId;
-                            try {
-                                libraryId = new ShortLibraryId(Short.parseShort(key));
-                            } catch (NumberFormatException e) {
-                                libraryId = new LongLibraryId(key);
-                            }
-                            if (!classMapper.isLibraryRegistered(libraryId)) {
+                while (resources.hasMoreElements()) {
+                    InputStream is = resources.nextElement().openStream();
+                    try {
+                        Properties p = new Properties();
+                        p.load(is);
+                        for (Map.Entry<Object, Object> entry : p.entrySet()) {
+                            String key = entry.getKey().toString().toLowerCase();
+                            String value = entry.getValue().toString();
+                            if (key.startsWith("lib.")) {
+                                key = key.substring(4);
+                                LibraryId libraryId;
                                 try {
-                                    Class<?> clazz = Class.forName(value);
-                                    if (Library.class.isAssignableFrom(clazz)) {
-                                        Library library = clazz.asSubclass(Library.class).newInstance();
-                                        classMapper.registerLibrary(libraryId, library.getClasses());
-                                    } else {
-                                        throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
-                                    }
-                                } catch (ClassNotFoundException e) {
-                                    throw new InvalidConfigException("Unable to find class: " + value + ": " + e.getMessage(), e);
-                                } catch (InstantiationException e) {
-                                    throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
-                                } catch (IllegalAccessException e) {
-                                    throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
+                                    libraryId = new ShortLibraryId(Short.parseShort(key));
+                                } catch (NumberFormatException e) {
+                                    libraryId = new LongLibraryId(key);
                                 }
+                                if (!classMapper.isLibraryRegistered(libraryId)) {
+                                    try {
+                                        Class<?> clazz = Class.forName(value);
+                                        if (Library.class.isAssignableFrom(clazz)) {
+                                            Library library = clazz.asSubclass(Library.class).newInstance();
+                                            classMapper.registerLibrary(libraryId, library.getClasses());
+                                        } else {
+                                            throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
+                                        }
+                                    } catch (ClassNotFoundException e) {
+                                        throw new InvalidConfigException("Unable to find class: " + value + ": " + e.getMessage(), e);
+                                    } catch (InstantiationException e) {
+                                        throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
+                                    } catch (IllegalAccessException e) {
+                                        throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
+                                    }
+                                }
+                            } else if (key.equals("allowdynaclasses")) {
+                                setUnmappedClassesAllowed(Boolean.parseBoolean(value));
                             }
-                        } else if (key.equals("allowdynaclasses")) {
-                            setUnmappedClassesAllowed(Boolean.parseBoolean(value));
+                            String id = p.getProperty("id");
+                            loadedCfgs.add(id);
+                            cfgLocations.put(id, classpathLocation);
                         }
-                        String id = p.getProperty("id");
-                        loadedCfgs.add(id);
-                        cfgLocations.put(id, classpathLocation);
+                    } finally {
+                        IOUtils.close(is);
                     }
-                } finally {
-                    IOUtils.close(is);
                 }
             }
         } catch (IOException e) {
