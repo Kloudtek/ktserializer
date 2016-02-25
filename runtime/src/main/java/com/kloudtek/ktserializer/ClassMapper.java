@@ -6,10 +6,7 @@ package com.kloudtek.ktserializer;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * A class mapper can be used when serializing an object which support serialization of sub-classes (or interface implementations).
@@ -21,6 +18,7 @@ public class ClassMapper {
     private final ArrayList<ArrayList<String>> libraryClasses = new ArrayList<ArrayList<String>>();
     private final HashMap<ClassId, String> classIdToName = new HashMap<ClassId, String>();
     private final HashMap<String, ClassId> nameToClassId = new HashMap<String, ClassId>();
+    private final HashSet<LibraryId> libraries = new HashSet<LibraryId>();
 
     public ClassMapper() {
         registerLibraryInternal(new ShortLibraryId((short) 0), toStrings(defaultClasses));
@@ -37,6 +35,10 @@ public class ClassMapper {
 
     public ClassId get(String classType) {
         return nameToClassId.get(classType);
+    }
+
+    public boolean isLibraryRegistered(LibraryId libraryId) {
+        return libraries.contains(libraryId);
     }
 
     public void registerLibrary(LibraryId libraryId, Class<?>... classes) {
@@ -61,6 +63,9 @@ public class ClassMapper {
     }
 
     private synchronized void registerLibraryInternal(LibraryId libraryId, List<String> classes) {
+        if (libraries.contains(libraryId)) {
+            throw new IllegalArgumentException("Library already registered: " + libraryId);
+        }
         ArrayList<String> list = new ArrayList<String>(classes.size());
         for (int i = 0; i < classes.size(); i++) {
             String className = classes.get(i);
@@ -74,6 +79,7 @@ public class ClassMapper {
             nameToClassId.put(className, classId);
         }
         libraryClasses.add(list);
+        libraries.add(libraryId);
     }
 
     @NotNull

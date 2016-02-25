@@ -21,9 +21,8 @@ public class SerializationEngine {
     protected ClassMapper classMapper;
     protected boolean unmappedClassesAllowed = true;
     protected int maxReadSize;
-    private String cfgLoadedId;
-    private boolean cfgLoaded;
-    private String cfgLocation;
+    private final HashSet<String> loadedCfgs = new HashSet<String>();
+    private final HashMap<String, String> cfgLocations = new HashMap<String, String>();
 
     public SerializationEngine() {
         this(Serializer.systemClassMapper());
@@ -176,13 +175,6 @@ public class SerializationEngine {
     }
 
     public synchronized void loadConfig(String classpathLocation) {
-        if (cfgLoaded) {
-            StringBuilder txt = new StringBuilder("Config already loaded from ").append(cfgLocation);
-            if (cfgLoadedId != null) {
-                txt.append(" id=").append(cfgLoadedId);
-            }
-            throw new InvalidConfigException(txt.toString());
-        }
         try {
             InputStream is = ClassMapper.class.getClassLoader().getResourceAsStream(classpathLocation);
             if (is == null) {
@@ -191,7 +183,6 @@ public class SerializationEngine {
                 try {
                     Properties p = new Properties();
                     p.load(is);
-                    cfgLoadedId = p.getProperty("id");
                     for (Map.Entry<Object, Object> entry : p.entrySet()) {
                         String key = entry.getKey().toString().toLowerCase();
                         String value = entry.getValue().toString();
@@ -203,26 +194,29 @@ public class SerializationEngine {
                             } catch (NumberFormatException e) {
                                 libraryId = new LongLibraryId(key);
                             }
-                            try {
-                                Class<?> clazz = Class.forName(value);
-                                if (Library.class.isAssignableFrom(clazz)) {
-                                    Library library = clazz.asSubclass(Library.class).newInstance();
-                                    classMapper.registerLibrary(libraryId, library.getClasses());
-                                } else {
-                                    throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
+                            if (!classMapper.isLibraryRegistered(libraryId)) {
+                                try {
+                                    Class<?> clazz = Class.forName(value);
+                                    if (Library.class.isAssignableFrom(clazz)) {
+                                        Library library = clazz.asSubclass(Library.class).newInstance();
+                                        classMapper.registerLibrary(libraryId, library.getClasses());
+                                    } else {
+                                        throw new InvalidConfigException("Invalid ktserializer class isn't a library: " + clazz.getName());
+                                    }
+                                } catch (ClassNotFoundException e) {
+                                    throw new InvalidConfigException("Unable to find class: " + value + ": " + e.getMessage(), e);
+                                } catch (InstantiationException e) {
+                                    throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
+                                } catch (IllegalAccessException e) {
+                                    throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
                                 }
-                            } catch (ClassNotFoundException e) {
-                                throw new InvalidConfigException("Unable to find class: " + value + ": " + e.getMessage(), e);
-                            } catch (InstantiationException e) {
-                                throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
-                            } catch (IllegalAccessException e) {
-                                throw new InvalidConfigException("Unable to instantiate class: " + value + ": " + e.getMessage(), e);
                             }
                         } else if (key.equals("allowdynaclasses")) {
                             setUnmappedClassesAllowed(Boolean.parseBoolean(value));
                         }
-                        cfgLoaded = true;
-                        cfgLocation = classpathLocation;
+                        String id = p.getProperty("id");
+                        loadedCfgs.add(id);
+                        cfgLocations.put(id, classpathLocation);
                     }
                 } finally {
                     IOUtils.close(is);
@@ -241,12 +235,13 @@ public class SerializationEngine {
         checkConfigLoaded(null, null);
     }
 
-    public void checkConfigLoaded(@Nullable String cfgId, @Nullable Boolean dynaClassesAllowed) {
-        if (!cfgLoaded) {
-            throw new RuntimeException("KTSerialiser configuration hasn't been loaded");
-        }
-        if (cfgId != null && !cfgId.equals(cfgLoadedId)) {
-            throw new RuntimeException("KTSerialiser configuration file id " + cfgLoadedId + " doesn't match " + cfgId);
+    public void checkConfigLoaded(@Nullable Boolean dynaClassesAllowed, String... cfgIds) {
+        if (cfgIds != null) {
+            for (String id : cfgIds) {
+                if (!loadedCfgs.contains(id)) {
+                    throw new RuntimeException("KTSerialiser configuration file id " + id + " hasn't been loaded");
+                }
+            }
         }
         if (dynaClassesAllowed != null && !dynaClassesAllowed.equals(this.unmappedClassesAllowed)) {
             throw new RuntimeException("DynaClassesAllowed config mismatch (was expecting " + dynaClassesAllowed + ")");

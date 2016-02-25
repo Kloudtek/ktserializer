@@ -47,14 +47,24 @@ public class SerializerTest {
     @Test
     public void testShortIdLib() throws Exception {
         serializer.loadConfig("shortidlib.properties");
-        serializer.checkConfigLoaded("shortid", false);
+        serializer.checkConfigLoaded(false, "shortid");
         simpleLibTest(new TestLibraryShortIdObj());
     }
 
     @Test
     public void testLongIdLib() throws Exception {
         serializer.loadConfig("longidlib.properties");
-        serializer.checkConfigLoaded("longid", false);
+        serializer.checkConfigLoaded(false, "longid");
+        simpleLibTest(new TestLibraryLongIdObj());
+    }
+
+    @Test
+    public void testLongAndShortIdLib() throws Exception {
+        serializer.loadConfig("shortidlib.properties");
+        serializer.loadConfig("longidlib.properties");
+        serializer.checkConfigLoaded(false, "shortid");
+        serializer.checkConfigLoaded(false, "longid");
+        simpleLibTest(new TestLibraryShortIdObj());
         simpleLibTest(new TestLibraryLongIdObj());
     }
 
