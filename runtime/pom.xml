@@ -14,12 +14,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>ktserializer-runtime</artifactId>
+    <name>KTSerializer Runtime</name>
 
     <dependencies>
         <dependency>
             <groupId>com.kloudtek.ktutils</groupId>
             <artifactId>ktutils-io</artifactId>
-            <version>1.2.3</version>
+            <version>1.2.4</version>
         </dependency>
         <dependency>
             <groupId>com.intellij</groupId>

@@ -9,10 +9,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <description>KTSerializer is a serialization library designed to generate very small data sets</description>
+    <name>KTSerializer</name>
     <groupId>com.kloudtek.ktserializer</groupId>
     <artifactId>ktserializer</artifactId>
     <packaging>pom</packaging>
     <version>1.2-SNAPSHOT</version>
+    <url>https://github.com/Kloudtek/ktserializer</url>
     <organization>
         <name>Kloudtek</name>
         <url>http://www.kloudtek.com</url>
@@ -20,6 +22,17 @@
     <modules>
         <module>runtime</module>
     </modules>
+    <developers>
+        <developer>
+            <name>Yannick Menager</name>
+            <url>https://github.com/ymenager/</url>
+            <organization>Kloudtek</organization>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/Kloudtek/ktserializer/issues</url>
+    </issueManagement>
     <scm>
         <url>scm:git:git@github.com:Kloudtek/ktserializer.git</url>
         <connection>scm:git:git@github.com:Kloudtek/ktserializer.git</connection>
@@ -42,88 +55,79 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.10.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.6</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-    <repositories>
-        <repository>
-            <id>kloudtek-oss-releases</id>
-            <name>Kloudtek OSS releases</name>
-            <url>${repo.oss.release.url}</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>kloudtek-oss-snapshots</id>
-            <name>Kloudtek OSS snapshots</name>
-            <url>${repo.oss.snapshot.url}</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>kloudtek-oss-thirdparty</id>
-            <name>Kloudtek OSS thirdparty</name>
-            <url>https://s3.amazonaws.com/maven.kloudtek.com/thirdparty</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>kloudtek-oss-releases</id>
-            <name>Kloudtek OSS releases</name>
-            <url>${repo.oss.release.url}</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-            <id>kloudtek-oss-snapshots</id>
-            <name>Kloudtek OSS snapshots</name>
-            <url>${repo.oss.snapshot.url}</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-            <id>kloudtek-oss-thirdparty</id>
-            <name>Kloudtek OSS thirdparty</name>
-            <url>https://s3.amazonaws.com/maven.kloudtek.com/thirdparty</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
     <distributionManagement>
         <repository>
-            <id>kloudtek-oss-releases</id>
-            <name>Kloudtek OSS Releases Repository</name>
-            <url>${repo.oss.release.url}</url>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
         </repository>
         <snapshotRepository>
-            <id>kloudtek-oss-snapshots</id>
-            <name>Kloudtek OSS Snapshots Repository</name>
-            <url>${repo.oss.snapshot.url}</url>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>${gpg.key}</keyname>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
