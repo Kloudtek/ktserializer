@@ -196,6 +196,8 @@ public class SerializationEngine {
         for (Map.Entry<LibraryId, Class<? extends Library>> entry : config.getLibraries().entrySet()) {
             classMapper.registerLibrary(entry.getKey(), entry.getValue());
         }
+        loadedCfgs.add(config.getId());
+        cfgLocations.put(config.getId(), config.getClass().getName());
     }
 
     public synchronized void loadConfig(String classpathLocation) {
