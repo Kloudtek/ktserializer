@@ -175,6 +175,29 @@ public class SerializationEngine {
         this.maxReadSize = maxReadSize;
     }
 
+    public synchronized boolean loadDefaultConfig() {
+        try {
+            String configClassName = System.getProperty("com.kloudtek.ktserializer.ISerializerConfig", "KTSerializerConfig");
+            Class<?> configClass = Class.forName(configClassName);
+            ISerializerConfig config = ISerializerConfig.class.cast(configClass.newInstance());
+            load(config);
+            return true;
+        } catch (InstantiationException e) {
+            return false;
+        } catch (IllegalAccessException e) {
+            return false;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    private void load(ISerializerConfig config) {
+        setUnmappedClassesAllowed(config.isDynaClassesAllowed());
+        for (Map.Entry<LibraryId, Class<? extends Library>> entry : config.getLibraries().entrySet()) {
+            classMapper.registerLibrary(entry.getKey(), entry.getValue());
+        }
+    }
+
     public synchronized void loadConfig(String classpathLocation) {
         try {
             Enumeration<URL> resources = ClassMapper.class.getClassLoader().getResources(classpathLocation);

@@ -24,8 +24,10 @@ public class Serializer {
     private static boolean cfgLoaded;
 
     static {
-        if (ClassMapper.class.getClassLoader().getResource(GLOBAL_CONFIG) != null) {
-            globalInstance.loadConfig(GLOBAL_CONFIG);
+        if (!globalInstance.loadDefaultConfig()) {
+            if (ClassMapper.class.getClassLoader().getResource(GLOBAL_CONFIG) != null) {
+                globalInstance.loadConfig(GLOBAL_CONFIG);
+            }
         }
     }
 
