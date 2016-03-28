@@ -193,7 +193,7 @@ public class SerializationEngine {
 
     private void load(ISerializerConfig config) {
         setUnmappedClassesAllowed(config.isDynaClassesAllowed());
-        for (Map.Entry<LibraryId, Class<? extends Library>> entry : config.getLibraries().entrySet()) {
+        for (Map.Entry<LibraryId, Library> entry : config.getLibraries().entrySet()) {
             classMapper.registerLibrary(entry.getKey(), entry.getValue().getClasses());
         }
         loadedCfgs.add(config.getId());

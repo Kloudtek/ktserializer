@@ -14,5 +14,5 @@ public interface ISerializerConfig {
 
     boolean isDynaClassesAllowed();
 
-    Map<LibraryId, Class<? extends Library>> getLibraries();
+    Map<LibraryId, Library> getLibraries();
 }
