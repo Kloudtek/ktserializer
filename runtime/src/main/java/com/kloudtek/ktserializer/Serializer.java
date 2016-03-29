@@ -20,14 +20,12 @@ public class Serializer {
     public static final String GLOBAL_CONFIG = "ktserializer.properties";
     private static ClassMapper systemClassMapper = new ClassMapper();
     private static final SerializationEngine globalInstance = new SerializationEngine(systemClassMapper);
-    private static String cfgLoadedId;
-    private static boolean cfgLoaded;
+    private static boolean defaultCfgLoaded;
 
     static {
-        if (!globalInstance.loadDefaultConfig()) {
-            if (ClassMapper.class.getClassLoader().getResource(GLOBAL_CONFIG) != null) {
-                globalInstance.loadConfig(GLOBAL_CONFIG);
-            }
+        globalInstance.loadDefaultConfig();
+        if (ClassMapper.class.getClassLoader().getResource(GLOBAL_CONFIG) != null) {
+            globalInstance.loadConfig(GLOBAL_CONFIG);
         }
     }
 

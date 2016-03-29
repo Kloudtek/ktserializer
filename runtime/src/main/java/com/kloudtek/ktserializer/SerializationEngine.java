@@ -175,19 +175,18 @@ public class SerializationEngine {
         this.maxReadSize = maxReadSize;
     }
 
-    public synchronized boolean loadDefaultConfig() {
+    public synchronized void loadDefaultConfig() {
         try {
             String configClassName = System.getProperty("com.kloudtek.ktserializer.ISerializerConfig", "KTSerializerConfig");
             Class<?> configClass = Class.forName(configClassName);
             ISerializerConfig config = ISerializerConfig.class.cast(configClass.newInstance());
             load(config);
-            return true;
         } catch (InstantiationException e) {
-            return false;
+            throw new UnexpectedException(e);
         } catch (IllegalAccessException e) {
-            return false;
+            throw new UnexpectedException(e);
         } catch (ClassNotFoundException e) {
-            return false;
+            // that's fine
         }
     }
 
