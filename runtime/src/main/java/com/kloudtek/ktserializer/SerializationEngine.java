@@ -239,7 +239,9 @@ public class SerializationEngine {
                                     }
                                 }
                             } else if (key.equals("allowdynaclasses")) {
-                                setUnmappedClassesAllowed(Boolean.parseBoolean(value));
+                                if (unmappedClassesAllowed && !Boolean.parseBoolean(value)) {
+                                    setUnmappedClassesAllowed(false);
+                                }
                             }
                             String id = p.getProperty("id");
                             loadedCfgs.add(id);
