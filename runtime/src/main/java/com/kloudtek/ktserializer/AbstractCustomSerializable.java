@@ -25,7 +25,7 @@ public abstract class AbstractCustomSerializable implements CustomSerializable {
     }
 
     @Override
-    public int getVersion() {
+    public int getSerializationVersion() {
         return 0;
     }
 }

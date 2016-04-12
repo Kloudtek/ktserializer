@@ -26,7 +26,7 @@ public class SerializableList extends ArrayList<Serializable> implements CustomS
     }
 
     @Override
-    public int getVersion() {
+    public int getSerializationVersion() {
         return 0;
     }
 

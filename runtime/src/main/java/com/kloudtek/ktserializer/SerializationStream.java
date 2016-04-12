@@ -53,7 +53,7 @@ public class SerializationStream extends DataOutputStream {
 
     public void writeObject(Serializable serializable, ClassMapper classMapper, boolean specificClass) throws IOException {
         final SerializedDataHeader metadata = new SerializedDataHeader(this,
-                ((CustomSerializable) serializable).getVersion(), serializable.getClass(), classMapper, specificClass);
+                ((CustomSerializable) serializable).getSerializationVersion(), serializable.getClass(), classMapper, specificClass);
         metadata.write(this);
         ((CustomSerializable) serializable).serialize(this);
     }
