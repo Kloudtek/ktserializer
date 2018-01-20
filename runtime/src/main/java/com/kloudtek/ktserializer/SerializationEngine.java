@@ -177,7 +177,7 @@ public class SerializationEngine {
 
     public synchronized void loadDefaultConfig() {
         try {
-            String configClassName = System.getProperty("com.kloudtek.ktserializer.ISerializerConfig", "KTSerializerConfig");
+            String configClassName = System.getProperty("com.kloudtek.ktserializer.ISerializerConfig", "com.kloudtek.ktserializer.KTSerializerConfig");
             Class<?> configClass = Class.forName(configClassName);
             ISerializerConfig config = ISerializerConfig.class.cast(configClass.newInstance());
             load(config);
